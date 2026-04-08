@@ -1,0 +1,3468 @@
+openapi: 3.1.0
+info:
+  title: Race Control Dashboard API
+  version: 1.0.0
+  description: API contract for the ISUZU Racing frontend and local mock server integration.
+servers:
+  - url: http://localhost:4001
+paths:
+  /fleet:
+    get:
+      tags:
+        - Fleet
+      summary: Get fleet summary
+      description: Returns the active fleet used to populate the vehicle selector.
+      operationId: getFleet
+      responses:
+        '200':
+          description: Fleet summary returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FleetResponse'
+              examples:
+                default:
+                  value:
+                    cars:
+                      - id: 12
+                        number: '12'
+                        model: Isuzu D-Max Proto
+                        status: Active
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /drivers:
+    get:
+      tags:
+        - Fleet
+      summary: Get driver assignments
+      description: Returns driver records for the requested car IDs.
+      operationId: getDrivers
+      parameters:
+        - name: carIds
+          in: query
+          required: true
+          description: Comma-separated car IDs.
+          schema:
+            type: string
+            examples:
+              - 1,2,3
+      responses:
+        '200':
+          description: Driver assignments returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverListResponse'
+              examples:
+                default:
+                  value:
+                    drivers:
+                      - id: 8
+                        name: Driver 12
+                        carId: 12
+                        license: FIA-A
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /director/thresholds:
+    get:
+      tags:
+        - Director
+      summary: Get director anomaly thresholds
+      description: |
+        Returns the current per-metric threshold configuration used by the
+        backend anomaly engine. Configured in the Administration page
+        (THRESHOLDS tab) and held in the mock server runtime.
+      operationId: getDirectorThresholds
+      responses:
+        '200':
+          description: Current threshold configuration returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DirectorThresholdsResponse'
+              examples:
+                default:
+                  value:
+                    thresholds:
+                      rpm:
+                        { threshold: 9000, alertDelay: 1.0, warningPenalty: 3 }
+                      speed:
+                        { threshold: 300, alertDelay: 2.0, warningPenalty: 5 }
+                      fuelPressure:
+                        { threshold: 5.0, alertDelay: 1.0, warningPenalty: 3 }
+                      throttle:
+                        { threshold: 95, alertDelay: 1.0, warningPenalty: 3 }
+                      ignitionTiming:
+                        { threshold: 38, alertDelay: 1.0, warningPenalty: 3 }
+                      lambda:
+                        { threshold: 1.05, alertDelay: 1.0, warningPenalty: 3 }
+                      airflow:
+                        { threshold: 380, alertDelay: 1.0, warningPenalty: 3 }
+                    updatedAt: '2026-03-17T08:00:00Z'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - Director
+      summary: Update director anomaly thresholds
+      description: |
+        Replaces the full set of per-metric thresholds used by the backend
+        anomaly engine. Called from the Administration page when the operator
+        saves the THRESHOLDS tab. The backend must apply new values
+        immediately — the next anomaly evaluation cycle will use them.
+      operationId: updateDirectorThresholds
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DirectorThresholdsUpdateRequest'
+            examples:
+              default:
+                value:
+                  thresholds:
+                    rpm:
+                      { threshold: 10000, alertDelay: 3.0, warningPenalty: 3 }
+                    speed:
+                      { threshold: 300, alertDelay: 2.0, warningPenalty: 5 }
+                    fuelPressure:
+                      { threshold: 5.0, alertDelay: 1.0, warningPenalty: 3 }
+                    throttle:
+                      { threshold: 95, alertDelay: 1.0, warningPenalty: 3 }
+                    ignitionTiming:
+                      { threshold: 38, alertDelay: 1.0, warningPenalty: 3 }
+                    lambda:
+                      { threshold: 1.05, alertDelay: 1.0, warningPenalty: 3 }
+                    airflow:
+                      { threshold: 380, alertDelay: 1.0, warningPenalty: 3 }
+      responses:
+        '200':
+          description: Thresholds updated. Backend engine will use new values immediately.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - saved
+                properties:
+                  saved:
+                    type: boolean
+                    const: true
+                  updatedAt:
+                    type: string
+                    format: date-time
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /director/refresh-rate:
+    get:
+      tags:
+        - Director
+      summary: Get director graph refresh rate
+      description: |
+        Returns the current runtime sampling rate used by the Director Graph.
+        The frontend loads this value into shared platform state on startup.
+      operationId: getDirectorRefreshRate
+      responses:
+        '200':
+          description: Current refresh rate returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DirectorRefreshRateResponse'
+              examples:
+                default:
+                  value:
+                    refreshRateHz: 5
+                    updatedAt: '2026-04-07T09:30:00Z'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - Director
+      summary: Update director graph refresh rate
+      description: |
+        Replaces the runtime sampling rate used by the Director Graph.
+        Called from the Administration page when the operator selects a
+        refresh-rate preset.
+      operationId: updateDirectorRefreshRate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DirectorRefreshRateUpdateRequest'
+            examples:
+              default:
+                value:
+                  refreshRateHz: 10
+      responses:
+        '200':
+          description: Refresh rate updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DirectorRefreshRateWriteResponse'
+              examples:
+                default:
+                  value:
+                    saved: true
+                    refreshRateHz: 10
+                    updatedAt: '2026-04-07T09:31:00Z'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /race-control/cars/{carId}/snapshot:
+    get:
+      tags:
+        - Race Control
+      summary: Get race control snapshot
+      description: Returns the initial non-streaming Race Control dashboard payload for a selected vehicle.
+      operationId: getRaceControlSnapshot
+      parameters:
+        - $ref: '#/components/parameters/CarIdPath'
+      responses:
+        '200':
+          description: Snapshot returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RaceControlSnapshotResponse'
+              examples:
+                default:
+                  value:
+                    car:
+                      id: 12
+                      number: '12'
+                      model: Isuzu D-Max Proto
+                      status: Active
+                    driver:
+                      id: 8
+                      name: Driver 12
+                      carId: 12
+                      license: FIA-A
+                    sensorCategories:
+                      POWERTRAIN:
+                        - name: Engine Oil Pressure
+                          value: 4.2 bar
+                          status: ok
+                          channel: CH-1
+                        - name: Fuel Flow Rate
+                          value: 98 kg/h
+                          status: ok
+                          channel: CH-2
+                        - name: Turbo Boost
+                          value: 2.8 bar
+                          status: warn
+                          channel: CH-3
+                        - name: Gearbox Temp
+                          value: 115 °C
+                          status: ok
+                          channel: CH-4
+                        - name: Exhaust Gas Temp
+                          value: 850 °C
+                          status: ok
+                          channel: CH-5
+                        - name: Coolant Temp
+                          value: 92 °C
+                          status: ok
+                          channel: CH-6
+                      CHASSIS:
+                        - name: FL Suspension Travel
+                          value: 120 mm
+                          status: ok
+                          channel: CH-7
+                        - name: FR Suspension Travel
+                          value: 118 mm
+                          status: ok
+                          channel: CH-8
+                        - name: Brake Line Pressure
+                          value: 42 bar
+                          status: ok
+                          channel: CH-9
+                        - name: Steering Angle
+                          value: '-2.4°'
+                          status: ok
+                          channel: CH-10
+                        - name: Tire Pressure Monitor
+                          value: Active
+                          status: ok
+                          channel: CH-11
+                      AERO:
+                        - name: Front Wing Load
+                          value: 3200 N
+                          status: ok
+                          channel: CH-12
+                        - name: Rear Wing Load
+                          value: 4500 N
+                          status: ok
+                          channel: CH-13
+                        - name: Underbody Airflow
+                          value: Acquiring
+                          status: calib
+                          channel: CH-14
+                        - name: DRS Status
+                          value: Closed
+                          status: ok
+                          channel: CH-15
+                      ELECTRONICS:
+                        - name: ECU Status
+                          value: Map 4
+                          status: ok
+                          channel: CH-16
+                        - name: Telemetry Link
+                          value: 5G - 24 ms
+                          status: ok
+                          channel: CH-17
+                        - name: GPS Signal
+                          value: 12 Sats
+                          status: ok
+                          channel: CH-18
+                        - name: Battery Voltage
+                          value: 12.4 V
+                          status: warn
+                          channel: CH-19
+                        - name: Hybrid System
+                          value: Ready
+                          status: ok
+                          channel: CH-20
+                    alerts:
+                      - id: alert-1
+                        message: Front Left Brake Temp High
+                        severity: warning
+                        time: '2026-03-16T10:42:01Z'
+                        acknowledged: false
+                    connection:
+                      state: synchronized
+                      latencyMs: 24
+                      boxName: Mini-Telemetry-V2
+                      firmwareVersion: v3.12
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /cars/{carId}/alerts:
+    get:
+      tags:
+        - Race Control
+      summary: Get active alerts
+      description: Returns alerts for a selected vehicle.
+      operationId: getCarAlerts
+      parameters:
+        - $ref: '#/components/parameters/CarIdPath'
+        - name: state
+          in: query
+          required: false
+          description: Filter alerts by state.
+          schema:
+            type: string
+            enum:
+              - active
+              - acknowledged
+              - all
+            default: active
+      responses:
+        '200':
+          description: Alerts returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertsResponse'
+              examples:
+                default:
+                  value:
+                    alerts:
+                      - id: alert-1
+                        message: Front Left Brake Temp High
+                        severity: warning
+                        time: '2026-03-16T10:42:01Z'
+                        acknowledged: false
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /cars/{carId}/alerts/acknowledge:
+    post:
+      tags:
+        - Race Control
+      summary: Acknowledge alerts
+      description: Acknowledges one or more active alerts for a vehicle.
+      operationId: acknowledgeAlerts
+      parameters:
+        - $ref: '#/components/parameters/CarIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcknowledgeAlertsRequest'
+            examples:
+              default:
+                value:
+                  alertIds:
+                    - alert-1
+                    - alert-2
+      responses:
+        '200':
+          description: Alerts acknowledged successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcknowledgeAlertsResponse'
+              examples:
+                default:
+                  value:
+                    acknowledgedAlertIds:
+                      - alert-1
+                      - alert-2
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /users/{userId}/preferences/race-control-layout:
+    get:
+      tags:
+        - Preferences
+      summary: Get race control layout preferences
+      description: Returns the saved main layout and per-category sensor layouts for a user.
+      operationId: getRaceControlLayout
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      responses:
+        '200':
+          description: Race control layout preferences returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RaceControlLayoutRequest'
+              examples:
+                default:
+                  value:
+                    mainLayout:
+                      - i: sensors
+                        x: 0
+                        y: 0
+                        w: 9
+                        h: 5
+                    sensorLayouts:
+                      POWERTRAIN:
+                        - i: '0'
+                          x: 0
+                          y: 0
+                          w: 4
+                          h: 2
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - Preferences
+      summary: Save race control layout preferences
+      description: Persists the main layout and per-category sensor layouts for a user.
+      operationId: updateRaceControlLayout
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RaceControlLayoutRequest'
+            examples:
+              default:
+                value:
+                  mainLayout:
+                    - i: sensors
+                      x: 0
+                      y: 0
+                      w: 9
+                      h: 5
+                  sensorLayouts:
+                    POWERTRAIN:
+                      - i: '0'
+                        x: 0
+                        y: 0
+                        w: 4
+                        h: 2
+      responses:
+        '200':
+          description: Layout preferences saved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RaceControlLayoutResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /users/{userId}/preferences/engineering-layout:
+    get:
+      tags:
+        - Preferences
+      summary: Get engineering layout preferences
+      description: Returns the saved Engineering dashboard layout and hidden widgets for a user.
+      operationId: getEngineeringLayout
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      responses:
+        '200':
+          description: Engineering layout preferences returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EngineeringLayoutRequest'
+              examples:
+                default:
+                  value:
+                    layout:
+                      - i: alerts
+                        x: 0
+                        y: 0
+                        w: 1
+                        h: 4
+                      - i: speed_rpm
+                        x: 3
+                        y: 4
+                        w: 1
+                        h: 2.3
+                    hiddenWidgets:
+                      - stress
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - Preferences
+      summary: Save engineering layout preferences
+      description: Persists the Engineering dashboard layout and hidden widgets for a user.
+      operationId: updateEngineeringLayout
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EngineeringLayoutRequest'
+            examples:
+              default:
+                value:
+                  layout:
+                    - i: alerts
+                      x: 0
+                      y: 0
+                      w: 1
+                      h: 4
+                    - i: speed_rpm
+                      x: 3
+                      y: 4
+                      w: 1
+                      h: 2.3
+                  hiddenWidgets:
+                    - stress
+      responses:
+        '200':
+          description: Engineering layout preferences saved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EngineeringLayoutResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /engineering/cars/{carId}/snapshot:
+    get:
+      tags:
+        - Engineering
+      summary: Get engineering dashboard snapshot
+      description: Returns initial Engineering dashboard data for a selected vehicle.
+      operationId: getEngineeringSnapshot
+      parameters:
+        - $ref: '#/components/parameters/CarIdPath'
+      responses:
+        '200':
+          description: Engineering snapshot returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EngineeringSnapshotResponse'
+              examples:
+                default:
+                  value:
+                    car:
+                      id: 12
+                      number: '12'
+                      model: Isuzu D-Max Proto
+                      status: Active
+                    driver:
+                      id: 8
+                      name: Driver 12
+                      carId: 12
+                      license: FIA-A
+                    alerts:
+                      - id: eng-alert-1
+                        message: Front Left Brake Temp High
+                        severity: warning
+                        time: '2026-03-16T10:42:01Z'
+                        acknowledged: false
+                    telemetry:
+                      timestamp: '2026-03-16T10:42:01Z'
+                      heartRate: 136
+                      respiration: 17
+                      stressLevel: 52
+                      lapProgress: 0.445
+                      steering: 14.2
+                      throttle: 68.4
+                      brake: 2.1
+                      speed: 214.8
+                      rpm: 7420
+                      oilTemp: 109.4
+                      fuel: 62.3
+                      lambda: 1.01
+                      boost: 1.86
+                      drs: true
+                      gLat: 1.48
+                      gLong: -0.22
+                      heading: 122.4
+                      tires:
+                        fl:
+                          speed: 215.1
+                          temp: 104
+                          press: 1.2
+                          brake: 650
+                        fr:
+                          speed: 213.2
+                          temp: 105
+                          press: 1.1
+                          brake: 500
+                        rl:
+                          speed: 219.5
+                          temp: 113
+                          press: 1.2
+                          brake: 765
+                        rr:
+                          speed: 209.8
+                          temp: 115
+                          press: 1.3
+                          brake: 725
+                    conditions:
+                      airTemp: 38.6
+                      humidity: 74
+                      windSpeed: 13
+                      pressure: 1013
+                    status:
+                      position: P1
+                      lap: 16
+                      totalLaps: 67
+                      currentTime: '1:22.405'
+                      bestTime: '1:21.503'
+                    gapAnalysis:
+                      selectedLap: 16
+                      totalLaps: 67
+                      rivals:
+                        - number: '04'
+                          name: Driver 04
+                          gap: 2.145
+                          isPos: true
+                    map:
+                      circuitName: Buriram International Circuit
+                      activeFlag:
+                        turn: '3'
+                        type: YELLOW
+                      rivals:
+                        - id: 1
+                          name: '99'
+                          color: '#ff1744'
+                          progress: 0.54
+                        - id: 2
+                          name: '18'
+                          color: '#00e5ff'
+                          progress: 0.62
+                    cameras:
+                      feeds:
+                        FRONT: https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=800
+                        COCKPIT: https://picsum.photos/seed/racing-cockpit/1400/800
+                        REAR: https://images.unsplash.com/photo-1542228262-3d663b306a53?auto=format&fit=crop&q=80&w=800
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /engineering/cars/{carId}/recordings:
+    post:
+      tags:
+        - Engineering
+      summary: Create car-scoped recording session
+      description: |
+        Convenience entrypoint used by Engineering and Director pages.
+        The frontend supplies the target car in the path plus the requested
+        recording time range and destination folder. The backend owns file
+        generation, storage placement, and later exposes the resulting session
+        via GET /recordings for the File & Video page.
+      operationId: createEngineeringRecording
+      parameters:
+        - $ref: '#/components/parameters/CarIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateScopedRecordingRequest'
+            examples:
+              default:
+                value:
+                  sessionName: Buriram_Race_Session_01
+                  startDate: '2026-03-16T10:00:00Z'
+                  endDate: '2026-03-16T11:30:00Z'
+                  targetFolderId: root
+      responses:
+        '201':
+          description: Recording session created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordingSession'
+              examples:
+                default:
+                  value:
+                    id: rec-1742135237
+                    vehicleId: 12
+                    sessionName: Buriram_Race_Session_01
+                    startDate: '2026-03-16T10:00:00Z'
+                    endDate: '2026-03-16T11:30:00Z'
+                    targetFolderId: root
+                    status: processing
+                    fileCount: 13
+                    createdAt: '2026-03-16T10:42:01Z'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # -------------------------------------------------------------------------
+  # Historical Telemetry
+  # -------------------------------------------------------------------------
+  /telemetry/history:
+    get:
+      tags:
+        - Telemetry
+      summary: Get historical telemetry
+      description: |
+        Returns a time-ordered list of telemetry frames for a vehicle within
+        a date/time range. Intended for Director page lap comparison and
+        Files page CSV export. Realtime frames are delivered via WebSocket.
+      operationId: getTelemetryHistory
+      parameters:
+        - name: vehicleId
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          example: 12
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+          example: '2026-03-16T10:00:00Z'
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+          example: '2026-03-16T11:00:00Z'
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10000
+            default: 1000
+      responses:
+        '200':
+          description: Historical telemetry returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelemetryHistoryResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # -------------------------------------------------------------------------
+  # Alert Thresholds
+  # -------------------------------------------------------------------------
+  /alert-thresholds:
+    get:
+      tags:
+        - Alert Thresholds
+      summary: Get alert thresholds
+      description: Returns all configured alert thresholds. Used by the Settings page and all sensor pages.
+      operationId: getAlertThresholds
+      responses:
+        '200':
+          description: Alert thresholds returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertThresholdsResponse'
+              examples:
+                default:
+                  value:
+                    thresholds:
+                      - id: engineTemp
+                        metric: engineTemp
+                        label: Engine Temp
+                        unit: '°C'
+                        warningValue: 105
+                        criticalValue: 120
+                      - id: oilPressure
+                        metric: oilPressure
+                        label: Oil Pressure
+                        unit: bar
+                        warningValue: 1.5
+                        criticalValue: 1.0
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - Alert Thresholds
+      summary: Update alert thresholds
+      description: Replaces the full set of alert thresholds. Send every threshold including unchanged ones.
+      operationId: updateAlertThresholds
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlertThresholdsUpdateRequest'
+      responses:
+        '200':
+          description: Alert thresholds updated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - saved
+                properties:
+                  saved:
+                    type: boolean
+                    const: true
+                  updatedAt:
+                    type: string
+                    format: date-time
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # -------------------------------------------------------------------------
+  # Recording Sessions
+  # -------------------------------------------------------------------------
+  /recordings:
+    get:
+      tags:
+        - Recordings
+      summary: List recording sessions
+      description: |
+        Returns recording sessions for the File & Video page.
+        Each session tells the UI which car and time range were requested,
+        where the backend will store the output, and whether a storage download
+        URL is already available.
+      operationId: listRecordings
+      parameters:
+        - name: vehicleId
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Recordings returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordingListResponse'
+              examples:
+                default:
+                  value:
+                    recordings:
+                      - id: rec-1742135237
+                        vehicleId: 12
+                        sessionName: Buriram_Race_Session_01
+                        startDate: '2026-03-16T10:00:00Z'
+                        endDate: '2026-03-16T11:30:00Z'
+                        targetFolderId: root
+                        status: ready
+                        fileCount: 4
+                        createdAt: '2026-03-16T10:42:01Z'
+                        downloadUrl: https://storage.example.com/recordings/rec-1742135237.zip?signature=demo
+                        archiveFileName: Buriram_Race_Session_01.zip
+                      - id: rec-1742135401
+                        vehicleId: 18
+                        sessionName: Director_Incident_Window
+                        startDate: '2026-03-16T11:31:00Z'
+                        endDate: '2026-03-16T11:36:00Z'
+                        targetFolderId: incident-review
+                        status: processing
+                        fileCount: 0
+                        createdAt: '2026-03-16T11:36:05Z'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Recordings
+      summary: Create recording session
+      description: |
+        Triggers a new backend-managed recording job. The frontend sends the
+        selected vehicle, requested time range, and destination folder only.
+        The backend performs file generation, writes to storage, and later
+        exposes the session through GET /recordings and a downloadable URL.
+      operationId: createRecording
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRecordingRequest'
+            examples:
+              default:
+                value:
+                  vehicleId: 12
+                  sessionName: Buriram_Race_Session_01
+                  startDate: '2026-03-16T10:00:00Z'
+                  endDate: '2026-03-16T11:30:00Z'
+                  targetFolderId: root
+      responses:
+        '201':
+          description: Recording session created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordingSession'
+              examples:
+                default:
+                  value:
+                    id: rec-1742135237
+                    vehicleId: 12
+                    sessionName: Buriram_Race_Session_01
+                    startDate: '2026-03-16T10:00:00Z'
+                    endDate: '2026-03-16T11:30:00Z'
+                    targetFolderId: root
+                    status: processing
+                    fileCount: 0
+                    createdAt: '2026-03-16T10:42:01Z'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /recordings/{recordingId}/download:
+    get:
+      tags:
+        - Recordings
+      summary: Resolve recording download URL
+      description: |
+        Returns the backend-generated storage URL for a completed recording.
+        The backend remains responsible for file generation and storage; the
+        frontend only opens the returned URL.
+      operationId: downloadRecording
+      parameters:
+        - name: recordingId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Download URL resolved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordingDownloadResponse'
+              examples:
+                ready:
+                  value:
+                    recordingId: rec-1742135237
+                    status: ready
+                    url: https://storage.example.com/recordings/rec-1742135237.zip?signature=demo
+                    expiresAt: '2026-03-16T12:45:00Z'
+                    fileName: Buriram_Race_Session_01.zip
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Recording is not yet ready for download.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /files/tree:
+    get:
+      tags:
+        - Files
+      summary: Get file hierarchy tree
+      description: |
+        Returns the backend-managed File & Video hierarchy as a flat list of
+        nodes linked by `parentId`. This is the source of truth for the vault
+        tree shown in the frontend.
+      operationId: getFileTree
+      responses:
+        '200':
+          description: File hierarchy returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileTreeResponse'
+              examples:
+                default:
+                  value:
+                    files:
+                      - id: event-1
+                        parentId: root
+                        name: Buriram GT3 Series
+                        type: folder
+                        date: '2026-03-16T10:00:00Z'
+                      - id: rec-folder-1742135237
+                        parentId: event-1
+                        name: Buriram_Race_Session_01
+                        type: folder
+                        date: '2026-03-16T10:42:01Z'
+                      - id: rec-zip-1742135237
+                        parentId: rec-folder-1742135237
+                        name: Buriram_Race_Session_01.zip
+                        type: zip
+                        size: 412 MB
+                        date: '2026-03-16T10:45:00Z'
+                        downloadUrl: https://storage.example.com/recordings/rec-1742135237.zip?signature=demo
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /files/{fileId}:
+    delete:
+      tags:
+        - Files
+      summary: Delete file or folder command
+      description: |
+        Sends a delete command to the backend for a file or folder. Folder
+        deletion is recursive and the backend is responsible for removing any
+        related recording session metadata and storage objects.
+      operationId: deleteFileNode
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteFileRequest'
+            examples:
+              default:
+                value:
+                  password: Admin@123
+      responses:
+        '200':
+          description: Delete command completed successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteFileResponse'
+              examples:
+                default:
+                  value:
+                    deletedIds:
+                      - rec-folder-1742135237
+                      - rec-zip-1742135237
+                    deletedRecordingIds:
+                      - rec-1742135237
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: Invalid delete password.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # -------------------------------------------------------------------------
+  # Live Stream
+  # -------------------------------------------------------------------------
+  /vehicles/{vehicleId}/stream:
+    get:
+      tags:
+        - Live Stream
+      summary: Get vehicle stream URL
+      description: Returns the HTTP(S) stream URL for the onboard camera of a vehicle.
+      operationId: getVehicleStreamUrl
+      parameters:
+        - $ref: '#/components/parameters/VehicleIdPath'
+        - name: camera
+          in: query
+          required: false
+          description: Camera angle to resolve for the requested vehicle.
+          schema:
+            type: string
+            enum: [FRONT, COCKPIT, REAR]
+      responses:
+        '200':
+          description: Stream URL returned.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - vehicleId
+                  - camera
+                  - streamUrl
+                properties:
+                  vehicleId:
+                    type: integer
+                  camera:
+                    type: string
+                    enum: [FRONT, COCKPIT, REAR]
+                  streamUrl:
+                    type: string
+                    format: uri
+                  streamMimeType:
+                    type: string
+              examples:
+                default:
+                  value:
+                    vehicleId: 12
+                    camera: FRONT
+                    streamUrl: https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+                    streamMimeType: video/mp4
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # -------------------------------------------------------------------------
+  # Auth
+  # -------------------------------------------------------------------------
+  /auth/me:
+    get:
+      tags:
+        - Auth
+      summary: Get authenticated user session
+      description: |
+        Validates the bearer token and returns the normalized user account plus
+        the decoded JWT claims that the frontend must check before enabling
+        privileged UI. Tokens are re-issued with a fresh expiry when the mock
+        server restarts.
+      operationId: getAuthenticatedSession
+      responses:
+        '200':
+          description: Authenticated session returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSessionResponse'
+              examples:
+                admin:
+                  summary: Admin session
+                  value:
+                    authenticated: true
+                    user:
+                      id: user-admin-1
+                      name: Platform Administrator
+                      email: admin@isuzu.com
+                      role: ADMIN
+                      access: Admin
+                      permissions:
+                        raceControl: true
+                        engineering: true
+                        administration: true
+                        directorThresholds: true
+                    claims:
+                      sub: user-admin-1
+                      name: Platform Administrator
+                      email: admin@isuzu.com
+                      role: ADMIN
+                      access: Admin
+                      permissions:
+                        raceControl: true
+                        engineering: true
+                        administration: true
+                        directorThresholds: true
+                      iat: 1775495622
+                      exp: 1775499222
+                      iss: isuzu-racing-mock-auth
+                      aud: racing-platform-fe
+                    landingPage: /administration
+                director:
+                  summary: Director session
+                  value:
+                    authenticated: true
+                    user:
+                      id: user-director-1
+                      name: Race Director
+                      email: director@isuzu.com
+                      role: DIRECTOR
+                      access: Director
+                      permissions:
+                        raceControl: true
+                        engineering: true
+                        administration: false
+                        directorThresholds: true
+                    claims:
+                      sub: user-director-1
+                      name: Race Director
+                      email: director@isuzu.com
+                      role: DIRECTOR
+                      access: Director
+                      permissions:
+                        raceControl: true
+                        engineering: true
+                        administration: false
+                        directorThresholds: true
+                      iat: 1775495631
+                      exp: 1775499231
+                      iss: isuzu-racing-mock-auth
+                      aud: racing-platform-fe
+                    landingPage: /overview-director
+                engineer:
+                  summary: Engineer session
+                  value:
+                    authenticated: true
+                    user:
+                      id: user-engineer-1
+                      name: Trackside Engineer
+                      email: engineer@isuzu.com
+                      role: ENGINEER
+                      access: Engineer
+                      permissions:
+                        raceControl: true
+                        engineering: true
+                        administration: false
+                        directorThresholds: false
+                    claims:
+                      sub: user-engineer-1
+                      name: Trackside Engineer
+                      email: engineer@isuzu.com
+                      role: ENGINEER
+                      access: Engineer
+                      permissions:
+                        raceControl: true
+                        engineering: true
+                        administration: false
+                        directorThresholds: false
+                      iat: 1775495622
+                      exp: 1775499222
+                      iss: isuzu-racing-mock-auth
+                      aud: racing-platform-fe
+                    landingPage: /engineering
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Authenticate using mock credentials
+      description: |
+        Authenticates against the local mock account list and returns the
+        normalized user plus a JWT, permissions, and the recommended landing
+        page for that role. This is the current frontend mock login contract.
+      operationId: loginWithMockCredentials
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MockLoginRequest'
+            examples:
+              engineer:
+                value:
+                  email: engineer@isuzu.com
+                  password: Engineer@123
+              director:
+                value:
+                  email: director@isuzu.com
+                  password: Director@123
+      responses:
+        '200':
+          description: Mock login succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MockLoginResponse'
+              examples:
+                engineer:
+                  value:
+                    authenticated: true
+                    accessToken: <jwt-issued-at-runtime>
+                    tokenType: Bearer
+                    expiresAt: '2026-04-06T18:13:42.000Z'
+                    user:
+                      id: user-engineer-1
+                      name: Trackside Engineer
+                      role: ENGINEER
+                      email: engineer@isuzu.com
+                      access: Engineer
+                      permissions:
+                        raceControl: true
+                        engineering: true
+                        administration: false
+                        directorThresholds: false
+                    landingPage: /engineering
+                director:
+                  value:
+                    authenticated: true
+                    accessToken: <jwt-issued-at-runtime>
+                    tokenType: Bearer
+                    expiresAt: '2026-04-06T18:13:51.000Z'
+                    user:
+                      id: user-director-1
+                      name: Race Director
+                      role: DIRECTOR
+                      email: director@isuzu.com
+                      access: Director
+                      permissions:
+                        raceControl: true
+                        engineering: true
+                        administration: false
+                        directorThresholds: true
+                    landingPage: /overview-director
+        '401':
+          description: Mock credentials are invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MockLoginFailureResponse'
+              examples:
+                invalid:
+                  value:
+                    authenticated: false
+                    error: invalid mock credentials
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # -------------------------------------------------------------------------
+  # Administration – Events
+  # -------------------------------------------------------------------------
+  /administration/events:
+    get:
+      tags:
+        - Administration
+      summary: List events
+      operationId: listEvents
+      responses:
+        '200':
+          description: Events returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventListResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Administration
+      summary: Create event
+      operationId: createEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEventRequest'
+      responses:
+        '201':
+          description: Event created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RaceEvent'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /administration/events/{id}:
+    put:
+      tags:
+        - Administration
+      summary: Update event
+      operationId: updateEvent
+      parameters:
+        - $ref: '#/components/parameters/ResourceIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEventRequest'
+      responses:
+        '200':
+          description: Event updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RaceEvent'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - Administration
+      summary: Delete event
+      operationId: deleteEvent
+      parameters:
+        - $ref: '#/components/parameters/ResourceIdPath'
+      responses:
+        '204':
+          description: Event deleted.
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # -------------------------------------------------------------------------
+  # Administration – Users
+  # -------------------------------------------------------------------------
+  /administration/users:
+    get:
+      tags:
+        - Administration
+      summary: List users and assigned access labels
+      description: |
+        Returns the current user directory used by the Settings page. The
+        payload exposes the display `role` title and a simplified `access`
+        label used in the current UI.
+      operationId: listUsers
+      responses:
+        '200':
+          description: Users returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListResponse'
+              examples:
+                default:
+                  value:
+                    users:
+                      - id: user-admin-1
+                        name: Platform Administrator
+                        email: admin@isuzu.com
+                        role: Platform Administrator
+                        access: Admin
+                      - id: user-director-1
+                        name: Race Director
+                        email: director@isuzu.com
+                        role: Race Director
+                        access: Director
+                      - id: user-engineer-1
+                        name: Trackside Engineer
+                        email: engineer@isuzu.com
+                        role: Trackside Engineer
+                        access: Engineer
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # -------------------------------------------------------------------------
+  # Administration – Garages
+  # -------------------------------------------------------------------------
+  /administration/garages:
+    get:
+      tags:
+        - Administration
+      summary: List garages
+      operationId: listGarages
+      responses:
+        '200':
+          description: Garages returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GarageListResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Administration
+      summary: Create garage
+      operationId: createGarage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGarageRequest'
+      responses:
+        '201':
+          description: Garage created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Garage'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /administration/garages/{id}:
+    delete:
+      tags:
+        - Administration
+      summary: Delete garage
+      operationId: deleteGarage
+      parameters:
+        - $ref: '#/components/parameters/ResourceIdPath'
+      responses:
+        '204':
+          description: Garage deleted.
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # -------------------------------------------------------------------------
+  # Administration – Vehicles (full CRUD, extends read-only /fleet)
+  # -------------------------------------------------------------------------
+  /administration/vehicles:
+    get:
+      tags:
+        - Administration
+      summary: List vehicles (admin)
+      operationId: listVehiclesAdmin
+      responses:
+        '200':
+          description: Vehicles returned successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - vehicles
+                properties:
+                  vehicles:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Car'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Administration
+      summary: Create vehicle
+      operationId: createVehicle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVehicleRequest'
+      responses:
+        '201':
+          description: Vehicle created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Car'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /administration/vehicles/{id}:
+    put:
+      tags:
+        - Administration
+      summary: Update vehicle
+      operationId: updateVehicle
+      parameters:
+        - $ref: '#/components/parameters/ResourceIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVehicleRequest'
+      responses:
+        '200':
+          description: Vehicle updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Car'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - Administration
+      summary: Delete vehicle
+      operationId: deleteVehicle
+      parameters:
+        - $ref: '#/components/parameters/ResourceIdPath'
+      responses:
+        '204':
+          description: Vehicle deleted.
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /tasks:
+    get:
+      tags:
+        - Tasks
+      summary: List all tasks
+      operationId: listTasks
+      responses:
+        '200':
+          description: Task list returned successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - tasks
+                properties:
+                  tasks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+              examples:
+                default:
+                  value:
+                    tasks:
+                      - id: task-1
+                        title: Check front wing angle
+                        description: Verify front wing angle before session 3 warmup lap.
+                        status: TODO
+                        priority: HIGH
+                        assignee: Trackside Engineer
+                        dueDate: '2026-03-17T14:00:00Z'
+                      - id: task-2
+                        title: Replace FL brake pads
+                        description: Front-left brake temp exceeded threshold on lap 18. Schedule pad change.
+                        status: IN_PROGRESS
+                        priority: CRITICAL
+                        assignee: Platform Administrator
+                        dueDate: '2026-03-17T12:30:00Z'
+                      - id: task-3
+                        title: Review tire pressure data
+                        description: Analyze tire pressure trends from last session for optimal cold-start strategy.
+                        status: DONE
+                        priority: MEDIUM
+                        assignee: Trackside Engineer
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Tasks
+      summary: Create a task
+      operationId: createTask
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreate'
+      responses:
+        '201':
+          description: Task created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+              examples:
+                default:
+                  value:
+                    id: task-new
+                    title: New task
+                    description: ''
+                    status: TODO
+                    priority: LOW
+                    assignee: Unassigned
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /tasks/{id}:
+    patch:
+      tags:
+        - Tasks
+      summary: Update a task
+      operationId: updateTask
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreate'
+      responses:
+        '200':
+          description: Task updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+              examples:
+                default:
+                  value:
+                    id: task-1
+                    title: Check front wing angle (updated)
+                    description: Wing angle verified - no adjustment needed.
+                    status: DONE
+                    priority: HIGH
+                    assignee: Trackside Engineer
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - Tasks
+      summary: Delete a task
+      operationId: deleteTask
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Task deleted successfully.
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Send a bearer token in the `Authorization` header.
+
+        Example header values for backend integration:
+        - `Bearer {{JwtAdminBearerToken}}`
+        - `Bearer {{JwtDirectorBearerToken}}`
+        - `Bearer {{JwtEngineerBearerToken}}`
+
+        Expected claims are documented by `JwtClaims` and `/auth/me`.
+
+  parameters:
+    CarIdPath:
+      name: carId
+      in: path
+      required: true
+      description: Numeric vehicle identifier.
+      schema:
+        type: integer
+        minimum: 1
+      example: 12
+    VehicleIdPath:
+      name: vehicleId
+      in: path
+      required: true
+      description: Numeric vehicle identifier.
+      schema:
+        type: integer
+        minimum: 1
+      example: 12
+    UserIdPath:
+      name: userId
+      in: path
+      required: true
+      description: User identifier.
+      schema:
+        type: string
+      example: engineer-12
+    ResourceIdPath:
+      name: id
+      in: path
+      required: true
+      description: String resource identifier.
+      schema:
+        type: string
+      example: event-001
+
+  responses:
+    ValidationError:
+      description: The request was invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          examples:
+            default:
+              value:
+                error:
+                  code: VALIDATION_FAILED
+                  message: Invalid car ID parameter.
+                  details:
+                    field: carId
+    UnauthorizedError:
+      description: Authentication is required or the session is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          examples:
+            default:
+              value:
+                error:
+                  code: UNAUTHORIZED
+                  message: Authentication required.
+    NotFoundError:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          examples:
+            default:
+              value:
+                error:
+                  code: NOT_FOUND
+                  message: Requested resource was not found.
+    InternalServerError:
+      description: Unexpected backend failure.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          examples:
+            default:
+              value:
+                error:
+                  code: INTERNAL_SERVER_ERROR
+                  message: Unexpected backend failure.
+
+  examples:
+    JwtAdminBearerToken:
+      summary: Example Authorization header payload for an Admin user
+      value: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLWFkbWluLTEiLCJuYW1lIjoiT3BzIEFkbWluIiwiZW1haWwiOiJvcHMuYWRtaW5AaXN1enUtcmFjaW5nLmxvY2FsIiwicm9sZSI6IkFETUlOIiwicGVybWlzc2lvbnMiOnsicmFjZUNvbnRyb2wiOnRydWUsImVuZ2luZWVyaW5nIjp0cnVlLCJhZG1pbmlzdHJhdGlvbiI6dHJ1ZSwiZGlyZWN0b3JUaHJlc2hvbGRzIjp0cnVlfSwiaWF0IjoxNzc1NDYyNDAwLCJleHAiOjE3NzU0NjYwMDAsImlzcyI6ImlzdXp1LXJhY2luZy1hdXRoIiwiYXVkIjoicmFjaW5nLXBsYXRmb3JtIn0.signature-admin
+    JwtDirectorBearerToken:
+      summary: Example Authorization header payload for a Director user
+      value: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLWRpcmVjdG9yLTciLCJuYW1lIjoiU3VyaXlhIEJvb25tZWUiLCJlbWFpbCI6InN1cml5YS5ib29ubWVlQGlzdXp1LXJhY2luZy5sb2NhbCIsInJvbGUiOiJESVJFQ1RPUiIsInBlcm1pc3Npb25zIjp7InJhY2VDb250cm9sIjp0cnVlLCJlbmdpbmVlcmluZyI6dHJ1ZSwiYWRtaW5pc3RyYXRpb24iOmZhbHNlLCJkaXJlY3RvclRocmVzaG9sZHMiOnRydWV9LCJpYXQiOjE3NzU0NjI0MDAsImV4cCI6MTc3NTQ2NjAwMCwiaXNzIjoiaXN1enUtcmFjaW5nLWF1dGgiLCJhdWQiOiJyYWNpbmctcGxhdGZvcm0ifQ.signature-director
+    JwtEngineerBearerToken:
+      summary: Example Authorization header payload for an Engineer user
+      value: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLWVuZ2luZWVyLTEyIiwibmFtZSI6Ik5hcmluIENoYWlzaXJpIiwiZW1haWwiOiJuYXJpbi5jaGFpc2lyaUBpc3V6dS1yYWNpbmcubG9jYWwiLCJyb2xlIjoiRU5HSU5FRVIiLCJwZXJtaXNzaW9ucyI6eyJyYWNlQ29udHJvbCI6dHJ1ZSwiZW5naW5lZXJpbmciOnRydWUsImFkbWluaXN0cmF0aW9uIjpmYWxzZSwiZGlyZWN0b3JUaHJlc2hvbGRzIjpmYWxzZX0sImlhdCI6MTc3NTQ2MjQwMCwiZXhwIjoxNzc1NDY2MDAwLCJpc3MiOiJpc3V6dS1yYWNpbmctYXV0aCIsImF1ZCI6InJhY2luZy1wbGF0Zm9ybSJ9.signature-engineer
+
+  schemas:
+    UserRole:
+      type: string
+      description: System authorization role used by the backend.
+      enum:
+        - ADMIN
+        - DIRECTOR
+        - ENGINEER
+
+    UserPermissions:
+      type: object
+      description: Expanded permissions derived from the assigned role.
+      required:
+        - raceControl
+        - engineering
+        - administration
+        - directorThresholds
+      properties:
+        raceControl:
+          type: boolean
+          description: Access to Race Control and related dashboards.
+        engineering:
+          type: boolean
+          description: Access to Engineering dashboards and telemetry tooling.
+        administration:
+          type: boolean
+          description: Access to Command Center user, garage, and vehicle management.
+        directorThresholds:
+          type: boolean
+          description: Access to director threshold configuration.
+
+    JwtClaims:
+      type: object
+      required:
+        - sub
+        - name
+        - email
+        - role
+        - access
+        - permissions
+        - iat
+        - exp
+        - iss
+        - aud
+      properties:
+        sub:
+          type: string
+          description: Stable user identifier.
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          $ref: '#/components/schemas/UserRole'
+        access:
+          $ref: '#/components/schemas/MockAccessLevel'
+        permissions:
+          $ref: '#/components/schemas/UserPermissions'
+        iat:
+          type: integer
+          format: int64
+          description: Issued-at UNIX timestamp in seconds.
+        exp:
+          type: integer
+          format: int64
+          description: Expiry UNIX timestamp in seconds.
+        iss:
+          type: string
+          description: Token issuer.
+        aud:
+          type: string
+          description: Token audience.
+
+    AuthSessionResponse:
+      type: object
+      required:
+        - authenticated
+        - user
+        - claims
+        - landingPage
+      properties:
+        authenticated:
+          type: boolean
+          const: true
+        user:
+          $ref: '#/components/schemas/MockAuthenticatedUser'
+        claims:
+          $ref: '#/components/schemas/JwtClaims'
+        landingPage:
+          type: string
+
+    MockAccessLevel:
+      type: string
+      enum:
+        - Admin
+        - Director
+        - Engineer
+
+    MockLoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    MockAuthenticatedUser:
+      type: object
+      required:
+        - id
+        - name
+        - role
+        - email
+        - access
+        - permissions
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+        email:
+          type: string
+          format: email
+        access:
+          $ref: '#/components/schemas/MockAccessLevel'
+        permissions:
+          $ref: '#/components/schemas/UserPermissions'
+
+    MockLoginResponse:
+      type: object
+      required:
+        - authenticated
+        - accessToken
+        - tokenType
+        - expiresAt
+        - user
+        - landingPage
+      properties:
+        authenticated:
+          type: boolean
+          const: true
+        accessToken:
+          type: string
+          description: JWT signed by the current mock server process.
+        tokenType:
+          type: string
+          enum:
+            - Bearer
+        expiresAt:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/MockAuthenticatedUser'
+        landingPage:
+          type: string
+
+    MockLoginFailureResponse:
+      type: object
+      required:
+        - authenticated
+        - error
+      properties:
+        authenticated:
+          type: boolean
+          const: false
+        error:
+          type: string
+
+    DirectorThresholdMetric:
+      type: object
+      required:
+        - threshold
+        - alertDelay
+        - warningPenalty
+      properties:
+        threshold:
+          type: number
+          description: Metric value limit. Breach starts when value exceeds this.
+        alertDelay:
+          type: number
+          description: Seconds of continuous breach required to count 1 violation.
+          minimum: 0
+        warningPenalty:
+          type: number
+          description: Number of violations required to count 1 anomaly/punishment.
+          minimum: 1
+
+    DirectorThresholdsResponse:
+      type: object
+      required:
+        - thresholds
+      properties:
+        thresholds:
+          type: object
+          description: Per-metric threshold configuration keyed by metric name.
+          additionalProperties:
+            $ref: '#/components/schemas/DirectorThresholdMetric'
+        updatedAt:
+          type: string
+          format: date-time
+          description: ISO-8601 timestamp of last update. Absent if never explicitly saved.
+
+    DirectorThresholdsUpdateRequest:
+      type: object
+      required:
+        - thresholds
+      properties:
+        thresholds:
+          type: object
+          description: Full replacement set of per-metric threshold configuration.
+          additionalProperties:
+            $ref: '#/components/schemas/DirectorThresholdMetric'
+
+    DirectorRefreshRateResponse:
+      type: object
+      required:
+        - refreshRateHz
+      properties:
+        refreshRateHz:
+          type: number
+          minimum: 0.1
+          description: Runtime telemetry sampling rate in Hertz used by Director Graph.
+        updatedAt:
+          type: string
+          format: date-time
+
+    DirectorRefreshRateUpdateRequest:
+      type: object
+      required:
+        - refreshRateHz
+      properties:
+        refreshRateHz:
+          type: number
+          minimum: 0.1
+          description: New runtime telemetry sampling rate in Hertz.
+
+    DirectorRefreshRateWriteResponse:
+      type: object
+      required:
+        - saved
+        - refreshRateHz
+      properties:
+        saved:
+          type: boolean
+          const: true
+        refreshRateHz:
+          type: number
+          minimum: 0.1
+        updatedAt:
+          type: string
+          format: date-time
+
+    FleetResponse:
+      type: object
+      required:
+        - cars
+      properties:
+        cars:
+          type: array
+          items:
+            $ref: '#/components/schemas/Car'
+
+    DriverListResponse:
+      type: object
+      required:
+        - drivers
+      properties:
+        drivers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Driver'
+
+    AlertsResponse:
+      type: object
+      required:
+        - alerts
+      properties:
+        alerts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Alert'
+
+    AcknowledgeAlertsRequest:
+      type: object
+      required:
+        - alertIds
+      properties:
+        alertIds:
+          type: array
+          minItems: 1
+          items:
+            type: string
+
+    AcknowledgeAlertsResponse:
+      type: object
+      required:
+        - acknowledgedAlertIds
+      properties:
+        acknowledgedAlertIds:
+          type: array
+          items:
+            type: string
+
+    RaceControlSnapshotResponse:
+      type: object
+      required:
+        - car
+        - driver
+        - sensorCategories
+        - alerts
+        - connection
+      properties:
+        car:
+          $ref: '#/components/schemas/Car'
+        driver:
+          $ref: '#/components/schemas/Driver'
+        sensorCategories:
+          $ref: '#/components/schemas/SensorCategories'
+        alerts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Alert'
+        connection:
+          $ref: '#/components/schemas/ConnectionStatus'
+
+    RaceControlLayoutRequest:
+      type: object
+      required:
+        - mainLayout
+        - sensorLayouts
+      properties:
+        mainLayout:
+          type: array
+          items:
+            $ref: '#/components/schemas/LayoutItem'
+        sensorLayouts:
+          $ref: '#/components/schemas/SensorLayouts'
+
+    RaceControlLayoutResponse:
+      type: object
+      required:
+        - saved
+      properties:
+        saved:
+          type: boolean
+          const: true
+        updatedAt:
+          type: string
+          format: date-time
+
+    EngineeringLayoutItem:
+      type: object
+      required:
+        - i
+        - x
+        - y
+        - w
+        - h
+      properties:
+        i:
+          type: string
+        x:
+          type: number
+          minimum: 0
+        y:
+          type: number
+          minimum: 0
+        w:
+          type: number
+          minimum: 1
+        h:
+          type: number
+          minimum: 1
+
+    EngineeringLayoutRequest:
+      type: object
+      required:
+        - layout
+        - hiddenWidgets
+      properties:
+        layout:
+          type: array
+          items:
+            $ref: '#/components/schemas/EngineeringLayoutItem'
+        hiddenWidgets:
+          type: array
+          items:
+            type: string
+
+    EngineeringLayoutResponse:
+      type: object
+      required:
+        - saved
+      properties:
+        saved:
+          type: boolean
+          const: true
+        updatedAt:
+          type: string
+          format: date-time
+
+    EngineeringSnapshotResponse:
+      type: object
+      required:
+        - car
+        - driver
+        - alerts
+        - telemetry
+        - conditions
+        - status
+        - gapAnalysis
+        - map
+        - cameras
+      properties:
+        car:
+          $ref: '#/components/schemas/Car'
+        driver:
+          $ref: '#/components/schemas/Driver'
+        alerts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Alert'
+        telemetry:
+          $ref: '#/components/schemas/EngineeringTelemetryState'
+        telemetryHistory:
+          type: array
+          items:
+            $ref: '#/components/schemas/EngineeringTelemetryState'
+        conditions:
+          $ref: '#/components/schemas/EngineeringConditions'
+        status:
+          $ref: '#/components/schemas/EngineeringStatus'
+        gapAnalysis:
+          $ref: '#/components/schemas/EngineeringGapAnalysis'
+        map:
+          $ref: '#/components/schemas/EngineeringMapState'
+        cameras:
+          $ref: '#/components/schemas/EngineeringCameras'
+
+    CreateScopedRecordingRequest:
+      type: object
+      required:
+        - sessionName
+        - startDate
+        - endDate
+      properties:
+        sessionName:
+          type: string
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        targetFolderId:
+          type: string
+        createFolderName:
+          type: string
+        sourcePage:
+          $ref: '#/components/schemas/RecordingSourcePage'
+        requestedBy:
+          type: string
+
+    Car:
+      type: object
+      required:
+        - id
+        - number
+        - model
+        - status
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        number:
+          type: string
+        model:
+          type: string
+        status:
+          type: string
+        color:
+          type: string
+          description: Hex color code assigned to this vehicle for map and chart rendering.
+          example: '#ff1744'
+
+    Driver:
+      type: object
+      required:
+        - id
+        - name
+        - carId
+        - license
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+        carId:
+          type: integer
+          minimum: 1
+        license:
+          type: string
+
+    Alert:
+      type: object
+      required:
+        - id
+        - message
+        - severity
+        - time
+        - acknowledged
+      properties:
+        id:
+          type: string
+        message:
+          type: string
+        severity:
+          type: string
+          enum:
+            - info
+            - warning
+            - critical
+        time:
+          type: string
+          format: date-time
+        acknowledged:
+          type: boolean
+
+    SensorCategories:
+      type: object
+      required:
+        - POWERTRAIN
+        - CHASSIS
+        - AERO
+        - ELECTRONICS
+      properties:
+        POWERTRAIN:
+          type: array
+          items:
+            $ref: '#/components/schemas/SensorReading'
+        CHASSIS:
+          type: array
+          items:
+            $ref: '#/components/schemas/SensorReading'
+        AERO:
+          type: array
+          items:
+            $ref: '#/components/schemas/SensorReading'
+        ELECTRONICS:
+          type: array
+          items:
+            $ref: '#/components/schemas/SensorReading'
+
+    Task:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - status
+        - priority
+        - assignee
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum:
+            - TODO
+            - IN_PROGRESS
+            - DONE
+        priority:
+          type: string
+          enum:
+            - LOW
+            - MEDIUM
+            - HIGH
+            - CRITICAL
+        assignee:
+          type: string
+        dueDate:
+          type: string
+          format: date-time
+        attachment:
+          type: string
+
+    TaskCreate:
+      type: object
+      required:
+        - title
+        - description
+        - status
+        - priority
+        - assignee
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum:
+            - TODO
+            - IN_PROGRESS
+            - DONE
+        priority:
+          type: string
+          enum:
+            - LOW
+            - MEDIUM
+            - HIGH
+            - CRITICAL
+        assignee:
+          type: string
+        dueDate:
+          type: string
+          format: date-time
+        attachment:
+          type: string
+
+    SensorReading:
+      type: object
+      required:
+        - name
+        - value
+        - status
+        - channel
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+        status:
+          type: string
+          enum:
+            - ok
+            - warn
+            - calib
+            - error
+            - offline
+        channel:
+          type: string
+
+    ConnectionStatus:
+      type: object
+      required:
+        - state
+        - latencyMs
+      properties:
+        state:
+          type: string
+          enum:
+            - synchronized
+            - degraded
+            - offline
+        latencyMs:
+          type: integer
+          minimum: 0
+        boxName:
+          type: string
+        firmwareVersion:
+          type: string
+
+    EngineeringTelemetryState:
+      type: object
+      required:
+        - timestamp
+        - heartRate
+        - respiration
+        - stressLevel
+        - lapProgress
+        - steering
+        - throttle
+        - brake
+        - speed
+        - rpm
+        - oilTemp
+        - fuel
+        - lambda
+        - boost
+        - drs
+        - gLat
+        - gLong
+        - heading
+        - tires
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        heartRate:
+          type: number
+        respiration:
+          type: number
+          description: Breaths per minute.
+        stressLevel:
+          type: number
+          minimum: 0
+          maximum: 100
+        lapProgress:
+          type: number
+          minimum: 0
+          maximum: 1
+        steering:
+          type: number
+        throttle:
+          type: number
+        brake:
+          type: number
+        speed:
+          type: number
+        rpm:
+          type: number
+        oilTemp:
+          type: number
+        fuel:
+          type: number
+        lambda:
+          type: number
+        boost:
+          type: number
+        drs:
+          type: boolean
+        gLat:
+          type: number
+        gLong:
+          type: number
+        heading:
+          type: number
+        tires:
+          $ref: '#/components/schemas/EngineeringTires'
+
+    EngineeringConditions:
+      type: object
+      required:
+        - airTemp
+        - humidity
+        - windSpeed
+        - pressure
+      properties:
+        airTemp:
+          type: number
+        humidity:
+          type: number
+        windSpeed:
+          type: number
+        pressure:
+          type: number
+
+    EngineeringStatus:
+      type: object
+      required:
+        - position
+        - lap
+        - totalLaps
+        - currentTime
+        - bestTime
+      properties:
+        position:
+          type: string
+        lap:
+          type: integer
+          minimum: 1
+        totalLaps:
+          type: integer
+          minimum: 1
+        currentTime:
+          type: string
+        bestTime:
+          type: string
+
+    EngineeringGapAnalysis:
+      type: object
+      required:
+        - selectedLap
+        - totalLaps
+        - rivals
+      properties:
+        selectedLap:
+          type: integer
+          minimum: 1
+        totalLaps:
+          type: integer
+          minimum: 1
+        rivals:
+          type: array
+          items:
+            $ref: '#/components/schemas/EngineeringGapRival'
+
+    EngineeringGapRival:
+      type: object
+      required:
+        - number
+        - name
+        - gap
+        - isPos
+      properties:
+        number:
+          type: string
+        name:
+          type: string
+        gap:
+          type: number
+        isPos:
+          type: boolean
+
+    EngineeringMapState:
+      type: object
+      required:
+        - circuitName
+        - activeFlag
+        - rivals
+      properties:
+        circuitName:
+          type: string
+        activeFlag:
+          oneOf:
+            - type: 'null'
+            - $ref: '#/components/schemas/EngineeringFlagState'
+        rivals:
+          type: array
+          items:
+            $ref: '#/components/schemas/EngineeringMapRival'
+
+    EngineeringFlagState:
+      type: object
+      required:
+        - turn
+        - type
+      properties:
+        turn:
+          type: string
+        type:
+          type: string
+          enum:
+            - YELLOW
+            - RED
+            - GREEN
+
+    EngineeringMapRival:
+      type: object
+      required:
+        - id
+        - name
+        - color
+        - progress
+      properties:
+        id:
+          oneOf:
+            - type: integer
+            - type: string
+        name:
+          type: string
+        color:
+          type: string
+        progress:
+          type: number
+          minimum: 0
+          maximum: 1
+        isSelected:
+          type: boolean
+
+    EngineeringCameras:
+      type: object
+      required:
+        - feeds
+      properties:
+        feeds:
+          $ref: '#/components/schemas/EngineeringCameraFeeds'
+
+    EngineeringCameraFeeds:
+      type: object
+      required:
+        - FRONT
+        - COCKPIT
+        - REAR
+      properties:
+        FRONT:
+          type: string
+          format: uri
+        COCKPIT:
+          type: string
+          format: uri
+        REAR:
+          type: string
+          format: uri
+
+    EngineeringTires:
+      type: object
+      required:
+        - fl
+        - fr
+        - rl
+        - rr
+      properties:
+        fl:
+          $ref: '#/components/schemas/EngineeringTireTelemetry'
+        fr:
+          $ref: '#/components/schemas/EngineeringTireTelemetry'
+        rl:
+          $ref: '#/components/schemas/EngineeringTireTelemetry'
+        rr:
+          $ref: '#/components/schemas/EngineeringTireTelemetry'
+
+    EngineeringTireTelemetry:
+      type: object
+      required:
+        - speed
+        - temp
+        - press
+        - brake
+      properties:
+        speed:
+          type: number
+        temp:
+          type: number
+        press:
+          type: number
+        brake:
+          type: number
+
+    SensorLayouts:
+      type: object
+      properties:
+        POWERTRAIN:
+          type: array
+          items:
+            $ref: '#/components/schemas/LayoutItem'
+        CHASSIS:
+          type: array
+          items:
+            $ref: '#/components/schemas/LayoutItem'
+        AERO:
+          type: array
+          items:
+            $ref: '#/components/schemas/LayoutItem'
+        ELECTRONICS:
+          type: array
+          items:
+            $ref: '#/components/schemas/LayoutItem'
+
+    LayoutItem:
+      type: object
+      required:
+        - i
+        - x
+        - y
+        - w
+        - h
+      properties:
+        i:
+          type: string
+        x:
+          type: integer
+          minimum: 0
+        y:
+          type: integer
+          minimum: 0
+        w:
+          type: integer
+          minimum: 1
+        h:
+          type: integer
+          minimum: 1
+        minW:
+          type: integer
+          minimum: 1
+        minH:
+          type: integer
+          minimum: 1
+        maxW:
+          type: integer
+          minimum: 1
+        maxH:
+          type: integer
+          minimum: 1
+
+    ErrorEnvelope:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorPayload'
+
+    ErrorPayload:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+
+    TelemetryHistoryResponse:
+      type: object
+      required:
+        - vehicleId
+        - points
+      properties:
+        vehicleId:
+          type: integer
+          minimum: 1
+        points:
+          type: array
+          items:
+            $ref: '#/components/schemas/VehicleTelemetryFrame'
+
+    VehicleTelemetryFrame:
+      type: object
+      required:
+        - vehicleId
+        - driverId
+        - timestamp
+        - speed
+        - rpm
+        - fuel
+        - oilPressure
+        - oilTemp
+        - throttle
+        - brake
+        - gear
+        - lambda
+        - boost
+        - drs
+        - gLat
+        - gLong
+        - heading
+        - lapProgress
+      properties:
+        vehicleId:
+          type: integer
+        driverId:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+        speed:
+          type: number
+        rpm:
+          type: number
+        fuel:
+          type: number
+        oilPressure:
+          type: number
+        oilTemp:
+          type: number
+        throttle:
+          type: number
+        brake:
+          type: number
+        gear:
+          type: integer
+        lambda:
+          type: number
+        boost:
+          type: number
+        drs:
+          type: boolean
+        gLat:
+          type: number
+        gLong:
+          type: number
+        heading:
+          type: number
+        lapProgress:
+          type: number
+          minimum: 0
+          maximum: 1
+
+    AlertThreshold:
+      type: object
+      required:
+        - id
+        - metric
+        - label
+        - unit
+        - warningValue
+        - criticalValue
+      properties:
+        id:
+          type: string
+        metric:
+          type: string
+        label:
+          type: string
+        unit:
+          type: string
+        warningValue:
+          type: number
+        criticalValue:
+          type: number
+
+    AlertThresholdsResponse:
+      type: object
+      required:
+        - thresholds
+      properties:
+        thresholds:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlertThreshold'
+
+    AlertThresholdsUpdateRequest:
+      type: object
+      required:
+        - thresholds
+      properties:
+        thresholds:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/AlertThreshold'
+
+    RecordingSession:
+      type: object
+      required:
+        - id
+        - vehicleId
+        - sessionName
+        - startDate
+        - endDate
+        - status
+        - fileCount
+        - createdAt
+      properties:
+        id:
+          type: string
+        vehicleId:
+          type: integer
+          minimum: 1
+        sessionName:
+          type: string
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+            - pending
+            - processing
+            - ready
+            - error
+        fileCount:
+          type: integer
+          minimum: 0
+        createdAt:
+          type: string
+          format: date-time
+        targetFolderId:
+          type: string
+        downloadUrl:
+          type: string
+          format: uri
+        archiveFileName:
+          type: string
+        sourcePage:
+          $ref: '#/components/schemas/RecordingSourcePage'
+        requestedBy:
+          type: string
+
+    CreateRecordingRequest:
+      type: object
+      required:
+        - vehicleId
+        - sessionName
+        - startDate
+        - endDate
+      properties:
+        vehicleId:
+          type: integer
+          minimum: 1
+        sessionName:
+          type: string
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        targetFolderId:
+          type: string
+        createFolderName:
+          type: string
+        sourcePage:
+          $ref: '#/components/schemas/RecordingSourcePage'
+        requestedBy:
+          type: string
+
+    RecordingSourcePage:
+      type: string
+      enum:
+        - ENGINEERING
+        - DIRECTOR
+
+    FileTreeResponse:
+      type: object
+      required:
+        - files
+      properties:
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/StoredFileNode'
+
+    StoredFileNode:
+      type: object
+      required:
+        - id
+        - parentId
+        - name
+        - type
+        - date
+      properties:
+        id:
+          type: string
+        parentId:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - folder
+            - csv
+            - mp4
+            - zip
+        size:
+          type: string
+        date:
+          type: string
+        downloadUrl:
+          type: string
+          format: uri
+
+    DeleteFileRequest:
+      type: object
+      required:
+        - password
+      properties:
+        password:
+          type: string
+
+    DeleteFileResponse:
+      type: object
+      required:
+        - deletedIds
+      properties:
+        deletedIds:
+          type: array
+          items:
+            type: string
+        deletedRecordingIds:
+          type: array
+          items:
+            type: string
+
+    RecordingDownloadResponse:
+      type: object
+      required:
+        - recordingId
+        - status
+      properties:
+        recordingId:
+          type: string
+        status:
+          type: string
+          enum:
+            - pending
+            - processing
+            - ready
+            - error
+        url:
+          type: string
+          format: uri
+        expiresAt:
+          type: string
+          format: date-time
+        fileName:
+          type: string
+
+    RecordingListResponse:
+      type: object
+      required:
+        - recordings
+      properties:
+        recordings:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecordingSession'
+
+    RaceEvent:
+      type: object
+      required:
+        - id
+        - name
+        - track
+        - sessionType
+        - scheduledAt
+        - status
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        track:
+          type: string
+        sessionType:
+          type: string
+          enum:
+            - PRACTICE
+            - QUALIFYING
+            - RACE
+            - TEST
+        scheduledAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+            - upcoming
+            - active
+            - completed
+
+    CreateEventRequest:
+      type: object
+      required:
+        - name
+        - track
+        - sessionType
+        - scheduledAt
+      properties:
+        name:
+          type: string
+        track:
+          type: string
+        sessionType:
+          type: string
+          enum:
+            - PRACTICE
+            - QUALIFYING
+            - RACE
+            - TEST
+        scheduledAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+            - upcoming
+            - active
+            - completed
+
+    EventListResponse:
+      type: object
+      required:
+        - events
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/RaceEvent'
+
+    AdminUser:
+      type: object
+      required:
+        - id
+        - name
+        - role
+        - email
+        - access
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          description: Human-readable role title shown in the UI.
+        email:
+          type: string
+          format: email
+        access:
+          $ref: '#/components/schemas/MockAccessLevel'
+
+    UserListResponse:
+      type: object
+      required:
+        - users
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminUser'
+
+    Garage:
+      type: object
+      required:
+        - id
+        - name
+        - location
+        - teamId
+        - assignedCarIds
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        location:
+          type: string
+        teamId:
+          type: string
+        assignedCarIds:
+          type: array
+          items:
+            type: integer
+
+    CreateGarageRequest:
+      type: object
+      required:
+        - name
+        - location
+        - teamId
+      properties:
+        name:
+          type: string
+        location:
+          type: string
+        teamId:
+          type: string
+        assignedCarIds:
+          type: array
+          items:
+            type: integer
+
+    GarageListResponse:
+      type: object
+      required:
+        - garages
+      properties:
+        garages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Garage'
+
+    CreateVehicleRequest:
+      type: object
+      required:
+        - number
+        - model
+        - status
+      properties:
+        number:
+          type: string
+        model:
+          type: string
+        status:
+          type: string

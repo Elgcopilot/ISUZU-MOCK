@@ -1,0 +1,618 @@
+asyncapi: 2.6.0
+id: urn:racing-platform:realtime-events
+info:
+  title: Racing Platform Realtime Events
+  version: 2.0.0
+  description: |
+    WebSocket event contract for all realtime channels in the Racing Platform.
+
+    All channels share one Socket.IO connection managed by `src/lib/websocket.ts`.
+    Clients subscribe per-channel using a unified `subscribe` / `unsubscribe`
+    event with a `WsSubscribePayload` that includes `channel` and optional
+    `vehicleId`, `driverId`, and `eventId` filters.
+
+    Realtime channels documented here:
+      - vehicle.telemetry  → live sensor telemetry (all sensor pages)
+      - vehicle.alert      → live alert stream
+      - vehicle.status     → connection state + race position
+      - vehicle.location   → GPS + track progress (map widgets)
+      - vehicle.biometric  → driver heart rate, respiration, stress
+      - vehicle.anomaly    → threshold breach detection (director pages)
+      - vehicle.sensors    → display-ready sensor category frames (2 Hz)
+
+    REST endpoints are documented in openapi.yaml.
+  license:
+    name: Proprietary
+  contact:
+    name: Racing Platform Frontend Team
+
+defaultContentType: application/json
+
+servers:
+  telemetry:
+    url: '{wsEndpoint}'
+    protocol: socket.io
+    description: Shared Socket.IO endpoint for all realtime channels.
+    variables:
+      wsEndpoint:
+        default: ws://api.racing-intelligence.local/telemetry
+        description: Configured via NEXT_PUBLIC_WS_ENDPOINT environment variable.
+
+channels:
+  # -------------------------------------------------------------------------
+  # Client → Server (publish)
+  # -------------------------------------------------------------------------
+  subscribe:
+    publish:
+      operationId: subscribeChannel
+      summary: Subscribe to a realtime channel for a specific vehicle/driver/event.
+      message:
+        $ref: '#/components/messages/SubscribeMessage'
+
+  unsubscribe:
+    publish:
+      operationId: unsubscribeChannel
+      summary: Cancel a channel subscription.
+      message:
+        $ref: '#/components/messages/UnsubscribeMessage'
+
+  # -------------------------------------------------------------------------
+  # Server → Client (subscribe)
+  # -------------------------------------------------------------------------
+  vehicle.telemetry:
+    subscribe:
+      operationId: onVehicleTelemetry
+      summary: Full telemetry frame for a subscribed vehicle. Delivered at the configured Hz rate.
+      message:
+        $ref: '#/components/messages/VehicleTelemetryMessage'
+
+  vehicle.alert:
+    subscribe:
+      operationId: onVehicleAlert
+      summary: Alert raised for a subscribed vehicle. Includes severity and acknowledgement state.
+      message:
+        $ref: '#/components/messages/VehicleAlertMessage'
+
+  vehicle.status:
+    subscribe:
+      operationId: onVehicleStatus
+      summary: Connection health and race position for a subscribed vehicle.
+      message:
+        $ref: '#/components/messages/VehicleStatusMessage'
+
+  vehicle.location:
+    subscribe:
+      operationId: onVehicleLocation
+      summary: GPS coordinates and track lap progress for map widgets.
+      message:
+        $ref: '#/components/messages/VehicleLocationMessage'
+
+  vehicle.biometric:
+    subscribe:
+      operationId: onVehicleBiometric
+      summary: Driver biometric data (heart rate, respiration, stress level).
+      message:
+        $ref: '#/components/messages/VehicleBiometricMessage'
+
+  vehicle.anomaly:
+    subscribe:
+      operationId: onVehicleAnomaly
+      summary: Threshold breach detection event used by Director and Overview-Director pages.
+      message:
+        $ref: '#/components/messages/VehicleAnomalyMessage'
+
+  vehicle.sensors:
+    subscribe:
+      operationId: onVehicleSensors
+      summary: Display-ready sensor category frames for the Race Control sensor panel. Delivered at 2 Hz alongside vehicle.telemetry.
+      message:
+        $ref: '#/components/messages/VehicleSensorsMessage'
+
+components:
+  messages:
+    SubscribeMessage:
+      name: subscribe
+      messageId: subscribeMessage
+      title: Subscribe to Channel
+      payload:
+        $ref: '#/components/schemas/WsSubscribePayload'
+
+    UnsubscribeMessage:
+      name: unsubscribe
+      messageId: unsubscribeMessage
+      title: Unsubscribe from Channel
+      payload:
+        $ref: '#/components/schemas/WsSubscribePayload'
+
+    VehicleTelemetryMessage:
+      name: vehicle.telemetry
+      messageId: vehicleTelemetryMessage
+      title: Vehicle Telemetry Frame
+      payload:
+        $ref: '#/components/schemas/VehicleTelemetry'
+
+    VehicleAlertMessage:
+      name: vehicle.alert
+      messageId: vehicleAlertMessage
+      title: Vehicle Alert Event
+      payload:
+        $ref: '#/components/schemas/VehicleAlert'
+
+    VehicleStatusMessage:
+      name: vehicle.status
+      messageId: vehicleStatusMessage
+      title: Vehicle Status Update
+      payload:
+        $ref: '#/components/schemas/VehicleStatus'
+
+    VehicleLocationMessage:
+      name: vehicle.location
+      messageId: vehicleLocationMessage
+      title: Vehicle Location Frame
+      payload:
+        $ref: '#/components/schemas/VehicleLocation'
+
+    VehicleBiometricMessage:
+      name: vehicle.biometric
+      messageId: vehicleBiometricMessage
+      title: Driver Biometric Frame
+      payload:
+        $ref: '#/components/schemas/DriverBiometric'
+
+    VehicleAnomalyMessage:
+      name: vehicle.anomaly
+      messageId: vehicleAnomalyMessage
+      title: Vehicle Anomaly Detection Event
+      payload:
+        $ref: '#/components/schemas/VehicleAnomaly'
+
+    VehicleSensorsMessage:
+      name: vehicle.sensors
+      messageId: vehicleSensorsMessage
+      title: Vehicle Sensor Category Frame
+      payload:
+        $ref: '#/components/schemas/VehicleSensorUpdate'
+
+  schemas:
+    WsSubscribePayload:
+      type: object
+      required:
+        - channel
+      properties:
+        channel:
+          type: string
+          enum:
+            - vehicle.telemetry
+            - vehicle.alert
+            - vehicle.status
+            - vehicle.location
+            - vehicle.biometric
+            - vehicle.anomaly
+            - vehicle.sensors
+        vehicleId:
+          type: integer
+          minimum: 1
+          description: Filter to a specific vehicle. Omit to receive events for all vehicles.
+        driverId:
+          type: integer
+          minimum: 1
+        eventId:
+          type: string
+
+    TireTelemetry:
+      type: object
+      required:
+        - speed
+        - temp
+        - press
+        - brake
+      properties:
+        speed:
+          type: number
+        temp:
+          type: number
+          description: Degrees Celsius.
+        press:
+          type: number
+          description: Bar.
+        brake:
+          type: number
+          description: Degrees Celsius.
+
+    VehicleTelemetry:
+      type: object
+      required:
+        - vehicleId
+        - driverId
+        - timestamp
+        - speed
+        - rpm
+        - fuel
+        - fuelPressure
+        - oilTemp
+        - throttle
+        - brake
+        - gear
+        - lambda
+        - boost
+        - drs
+        - gLat
+        - gLong
+        - heading
+        - steering
+        - airflow
+        - ignitionTiming
+        - tires
+      properties:
+        vehicleId:
+          type: integer
+        driverId:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+        speed:
+          type: number
+          description: km/h
+        rpm:
+          type: number
+        fuel:
+          type: number
+          description: Litres remaining.
+        fuelPressure:
+          type: number
+          description: Bar.
+        oilTemp:
+          type: number
+          description: Degrees Celsius.
+        throttle:
+          type: number
+          minimum: 0
+          maximum: 100
+        brake:
+          type: number
+          minimum: 0
+          maximum: 100
+        gear:
+          type: integer
+        lambda:
+          type: number
+        boost:
+          type: number
+          description: Bar.
+        drs:
+          type: boolean
+        gLat:
+          type: number
+        gLong:
+          type: number
+        heading:
+          type: number
+          description: Degrees (0–360).
+        steering:
+          type: number
+          description: Steering wheel angle in degrees. Negative = left, positive = right.
+          minimum: -180
+          maximum: 180
+        airflow:
+          type: number
+          description: Mass Air Flow in g/s.
+        ignitionTiming:
+          type: number
+          description: Ignition advance angle in degrees BTDC.
+        tires:
+          type: object
+          required:
+            - fl
+            - fr
+            - rl
+            - rr
+          properties:
+            fl:
+              $ref: '#/components/schemas/TireTelemetry'
+            fr:
+              $ref: '#/components/schemas/TireTelemetry'
+            rl:
+              $ref: '#/components/schemas/TireTelemetry'
+            rr:
+              $ref: '#/components/schemas/TireTelemetry'
+
+    VehicleAlert:
+      type: object
+      required:
+        - alertId
+        - vehicleId
+        - type
+        - severity
+        - message
+        - timestamp
+        - acknowledged
+      properties:
+        alertId:
+          type: string
+        vehicleId:
+          type: integer
+        type:
+          type: string
+        severity:
+          type: string
+          enum:
+            - info
+            - warning
+            - critical
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        acknowledged:
+          type: boolean
+
+    VehicleStatus:
+      type: object
+      required:
+        - vehicleId
+        - driverId
+        - connectionState
+        - latencyMs
+        - position
+        - lap
+        - totalLaps
+        - currentTime
+        - bestTime
+        - timestamp
+      properties:
+        vehicleId:
+          type: integer
+        driverId:
+          type: integer
+        connectionState:
+          type: string
+          enum:
+            - synchronized
+            - degraded
+            - offline
+        latencyMs:
+          type: integer
+          minimum: 0
+        position:
+          type: string
+          examples:
+            - P1
+        lap:
+          type: integer
+          minimum: 1
+        totalLaps:
+          type: integer
+          minimum: 1
+        currentTime:
+          type: string
+          examples:
+            - '1:22.405'
+        bestTime:
+          type: string
+          examples:
+            - '1:21.503'
+        timestamp:
+          type: string
+          format: date-time
+
+    VehicleLocation:
+      type: object
+      required:
+        - vehicleId
+        - timestamp
+        - lat
+        - lng
+        - speed
+        - heading
+        - lap
+        - lapProgress
+      properties:
+        vehicleId:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+        lat:
+          type: number
+        lng:
+          type: number
+        speed:
+          type: number
+          description: km/h
+        heading:
+          type: number
+          description: Degrees (0–360).
+        lap:
+          type: integer
+          minimum: 0
+        lapProgress:
+          type: number
+          minimum: 0
+          maximum: 1
+
+    DriverBiometric:
+      type: object
+      required:
+        - driverId
+        - vehicleId
+        - timestamp
+        - heartRate
+        - respiration
+        - stressLevel
+      properties:
+        driverId:
+          type: integer
+        vehicleId:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+        heartRate:
+          type: number
+          description: BPM
+        respiration:
+          type: number
+          description: Breaths per minute.
+        stressLevel:
+          type: number
+          minimum: 0
+          maximum: 100
+
+    MetricAnomalySummary:
+      type: object
+      required:
+        - value
+        - threshold
+        - violations
+        - anomalies
+        - isBreaching
+        - stats
+      properties:
+        value:
+          type: number
+          description: Latest measured value for this metric.
+        threshold:
+          type: number
+          description: Threshold configured for this metric (graph max in Administration).
+        violations:
+          type: integer
+          minimum: 0
+          description: >
+            Completed violation events. One violation is counted when the metric
+            stays above threshold continuously for alertDelay seconds (Administration).
+        anomalies:
+          type: integer
+          minimum: 0
+          description: >
+            Punishment events. Incremented every warningPenalty violations
+            (warningPenalty configured per metric in Administration).
+        isBreaching:
+          type: boolean
+          description: >
+            True when the metric is currently above threshold but the alertDelay
+            window has not elapsed — breach in progress, violation not yet counted.
+        stats:
+          type: object
+          required:
+            - min
+            - max
+          properties:
+            min:
+              type: number
+              description: Minimum observed value since session start or last reset.
+            max:
+              type: number
+              description: Maximum observed value since session start or last reset.
+
+    VehicleAnomaly:
+      type: object
+      description: >
+        Per-vehicle anomaly and violation summary. Emitted at 1 Hz on vehicle.anomaly.
+        All violation/anomaly counting is performed by the backend using alertDelay
+        and warningPenalty thresholds set in Administration.
+        Frontend clients must NOT recompute violations or anomalies locally.
+      required:
+        - vehicleId
+        - timestamp
+        - totalViolations
+        - totalAnomalies
+        - metrics
+      properties:
+        vehicleId:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+        totalViolations:
+          type: integer
+          minimum: 0
+          description: Sum of violations across all tracked metrics.
+        totalAnomalies:
+          type: integer
+          minimum: 0
+          description: Sum of anomaly/punishment events across all tracked metrics.
+        metrics:
+          type: object
+          description: >
+            Per-metric anomaly summaries. Keys match metric names available in
+            the vehicle.telemetry frame (rpm, speed, throttle, lambda, fuelPressure, airflow, ignitionTiming).
+          properties:
+            rpm:
+              $ref: '#/components/schemas/MetricAnomalySummary'
+            speed:
+              $ref: '#/components/schemas/MetricAnomalySummary'
+            throttle:
+              $ref: '#/components/schemas/MetricAnomalySummary'
+            lambda:
+              $ref: '#/components/schemas/MetricAnomalySummary'
+            fuelPressure:
+              $ref: '#/components/schemas/MetricAnomalySummary'
+            airflow:
+              $ref: '#/components/schemas/MetricAnomalySummary'
+            ignitionTiming:
+              $ref: '#/components/schemas/MetricAnomalySummary'
+
+    VehicleSensorUpdate:
+      type: object
+      description: Display-ready sensor category frames emitted on vehicle.sensors at 2 Hz.
+      required:
+        - vehicleId
+        - timestamp
+        - sensorCategories
+      properties:
+        vehicleId:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+        sensorCategories:
+          type: object
+          required:
+            - POWERTRAIN
+            - CHASSIS
+            - AERO
+            - ELECTRONICS
+          properties:
+            POWERTRAIN:
+              type: array
+              items:
+                $ref: '#/components/schemas/SensorReading'
+            CHASSIS:
+              type: array
+              items:
+                $ref: '#/components/schemas/SensorReading'
+            AERO:
+              type: array
+              items:
+                $ref: '#/components/schemas/SensorReading'
+            ELECTRONICS:
+              type: array
+              items:
+                $ref: '#/components/schemas/SensorReading'
+
+    SensorReading:
+      type: object
+      required:
+        - name
+        - value
+        - status
+        - channel
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+          description: Display-formatted value string (e.g. "4.2 bar", "Closed").
+        status:
+          type: string
+          enum:
+            - ok
+            - warn
+            - error
+            - calib
+            - offline
+        channel:
+          type: string
+          description: Channel identifier (e.g. "CH-1").

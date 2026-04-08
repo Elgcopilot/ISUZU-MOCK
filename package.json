@@ -1,0 +1,26 @@
+{
+  "name": "racing-platform-mock-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local mock server for the Racing Platform frontend. REST is served by Stoplight Prism directly from openapi.yaml. WebSocket channels are served by a minimal Socket.IO server.",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "rest": "node src/start-prism.js --port 4000 --host 0.0.0.0 --cors",
+    "ws": "tsx watch src/index.ts",
+    "dev": "concurrently --names REST,WS --prefix-colors cyan,yellow \"npm:rest\" \"npm:ws\"",
+    "ws:prod": "node dist/index.js",
+    "start": "concurrently --names REST,WS --prefix-colors cyan,yellow \"npm run rest\" \"tsx src/index.ts\"",
+    "start:prod": "concurrently --names REST,WS --prefix-colors cyan,yellow \"npm run rest\" \"npm run ws:prod\""
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.1",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "@stoplight/prism-cli": "^5.13.0",
+    "@types/node": "^22.13.14",
+    "concurrently": "^9.1.2",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}
