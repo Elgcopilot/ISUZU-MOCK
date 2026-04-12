@@ -79,6 +79,7 @@ interface EngineeringLayoutItem {
 interface StoredEngineeringLayout {
   layout: EngineeringLayoutItem[];
   hiddenWidgets: string[];
+  visualIdentityColor?: string; // HEX or RGB string
 }
 
 interface LayoutItem {
@@ -100,9 +101,17 @@ interface SensorLayouts {
   ELECTRONICS?: LayoutItem[];
 }
 
+interface Theme {
+  primary: string;
+  accent: string;
+  accentGlow: string;
+  brandGradientEnd: string;
+}
+
 interface StoredRaceControlLayout {
   mainLayout: LayoutItem[];
   sensorLayouts: SensorLayouts;
+  theme: Theme;
 }
 
 interface RaceEvent {
@@ -278,6 +287,17 @@ const mockCredentials: MockCredential[] = [
     password: "Engineer@123",
     landingPage: "/engineering",
     notes: "Use for telemetry and garage workflow scenarios.",
+    access: "Engineer",
+  },
+  {
+    id: "user-engineer-2",
+    role: "ENGINEER",
+    label: "Test Engineer",
+    name: "Narin Chaisiri",
+    email: "narin@isuzu.com",
+    password: "Engineer@123",
+    landingPage: "/engineering",
+    notes: "Second engineer for mock login.",
     access: "Engineer",
   },
 ];
@@ -1435,7 +1455,16 @@ const http = createServer(async (req: IncomingMessage, res: ServerResponse) => {
     );
     if (raceControlLayoutMatch) {
       const userId = decodeURIComponent(raceControlLayoutMatch[1]);
-      jsonResponse(res, 200, raceControlLayoutStore.get(userId) ?? null);
+      const stored = raceControlLayoutStore.get(userId);
+      if (!stored) {
+        jsonResponse(res, 200, null);
+        return;
+      }
+      jsonResponse(res, 200, {
+        mainLayout: stored.mainLayout,
+        sensorLayouts: stored.sensorLayouts,
+        theme: stored.theme,
+      });
       return;
     }
   }
@@ -1501,6 +1530,10 @@ const http = createServer(async (req: IncomingMessage, res: ServerResponse) => {
           hiddenWidgets: Array.isArray(body.hiddenWidgets)
             ? body.hiddenWidgets
             : [],
+          visualIdentityColor:
+            typeof body.visualIdentityColor === "string"
+              ? body.visualIdentityColor
+              : undefined,
         });
         jsonResponse(res, 200, {
           saved: true,
@@ -1520,16 +1553,45 @@ const http = createServer(async (req: IncomingMessage, res: ServerResponse) => {
         const userId = decodeURIComponent(raceControlLayoutMatch[1]);
         const raw = await readBody(req);
         const body = JSON.parse(raw) as Partial<StoredRaceControlLayout>;
+        // Validate theme object
+        const theme =
+          body.theme && typeof body.theme === "object"
+            ? {
+                primary:
+                  typeof body.theme.primary === "string"
+                    ? body.theme.primary
+                    : "#ffffff",
+                accent:
+                  typeof body.theme.accent === "string"
+                    ? body.theme.accent
+                    : "#ff3333",
+                accentGlow:
+                  typeof body.theme.accentGlow === "string"
+                    ? body.theme.accentGlow
+                    : "rgba(255,51,51,0.4)",
+                brandGradientEnd:
+                  typeof body.theme.brandGradientEnd === "string"
+                    ? body.theme.brandGradientEnd
+                    : "#ffffff",
+              }
+            : {
+                primary: "#ffffff",
+                accent: "#ff3333",
+                accentGlow: "rgba(255,51,51,0.4)",
+                brandGradientEnd: "#ffffff",
+              };
         raceControlLayoutStore.set(userId, {
           mainLayout: Array.isArray(body.mainLayout) ? body.mainLayout : [],
           sensorLayouts:
             body.sensorLayouts && typeof body.sensorLayouts === "object"
               ? body.sensorLayouts
               : {},
+          theme,
         });
         jsonResponse(res, 200, {
           saved: true,
           updatedAt: new Date().toISOString(),
+          theme,
         });
       } catch {
         jsonResponse(res, 400, { error: "invalid JSON body" });

@@ -14,24 +14,24 @@ paths:
       description: Returns the active fleet used to populate the vehicle selector.
       operationId: getFleet
       responses:
-        '200':
+        "200":
           description: Fleet summary returned successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FleetResponse'
+                $ref: "#/components/schemas/FleetResponse"
               examples:
                 default:
                   value:
                     cars:
                       - id: 12
-                        number: '12'
+                        number: "12"
                         model: Isuzu D-Max Proto
                         status: Active
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /drivers:
     get:
@@ -50,12 +50,12 @@ paths:
             examples:
               - 1,2,3
       responses:
-        '200':
+        "200":
           description: Driver assignments returned successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DriverListResponse'
+                $ref: "#/components/schemas/DriverListResponse"
               examples:
                 default:
                   value:
@@ -64,12 +64,12 @@ paths:
                         name: Driver 12
                         carId: 12
                         license: FIA-A
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /director/thresholds:
     get:
@@ -82,12 +82,12 @@ paths:
         (THRESHOLDS tab) and held in the mock server runtime.
       operationId: getDirectorThresholds
       responses:
-        '200':
+        "200":
           description: Current threshold configuration returned successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DirectorThresholdsResponse'
+                $ref: "#/components/schemas/DirectorThresholdsResponse"
               examples:
                 default:
                   value:
@@ -106,11 +106,11 @@ paths:
                         { threshold: 1.05, alertDelay: 1.0, warningPenalty: 3 }
                       airflow:
                         { threshold: 380, alertDelay: 1.0, warningPenalty: 3 }
-                    updatedAt: '2026-03-17T08:00:00Z'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                    updatedAt: "2026-03-17T08:00:00Z"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     put:
       tags:
         - Director
@@ -126,7 +126,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DirectorThresholdsUpdateRequest'
+              $ref: "#/components/schemas/DirectorThresholdsUpdateRequest"
             examples:
               default:
                 value:
@@ -146,7 +146,7 @@ paths:
                     airflow:
                       { threshold: 380, alertDelay: 1.0, warningPenalty: 3 }
       responses:
-        '200':
+        "200":
           description: Thresholds updated. Backend engine will use new values immediately.
           content:
             application/json:
@@ -161,12 +161,12 @@ paths:
                   updatedAt:
                     type: string
                     format: date-time
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /director/refresh-rate:
     get:
@@ -178,21 +178,21 @@ paths:
         The frontend loads this value into shared platform state on startup.
       operationId: getDirectorRefreshRate
       responses:
-        '200':
+        "200":
           description: Current refresh rate returned successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DirectorRefreshRateResponse'
+                $ref: "#/components/schemas/DirectorRefreshRateResponse"
               examples:
                 default:
                   value:
                     refreshRateHz: 5
-                    updatedAt: '2026-04-07T09:30:00Z'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                    updatedAt: "2026-04-07T09:30:00Z"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     put:
       tags:
         - Director
@@ -207,30 +207,30 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DirectorRefreshRateUpdateRequest'
+              $ref: "#/components/schemas/DirectorRefreshRateUpdateRequest"
             examples:
               default:
                 value:
                   refreshRateHz: 10
       responses:
-        '200':
+        "200":
           description: Refresh rate updated successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DirectorRefreshRateWriteResponse'
+                $ref: "#/components/schemas/DirectorRefreshRateWriteResponse"
               examples:
                 default:
                   value:
                     saved: true
                     refreshRateHz: 10
-                    updatedAt: '2026-04-07T09:31:00Z'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                    updatedAt: "2026-04-07T09:31:00Z"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /race-control/cars/{carId}/snapshot:
     get:
@@ -240,20 +240,20 @@ paths:
       description: Returns the initial non-streaming Race Control dashboard payload for a selected vehicle.
       operationId: getRaceControlSnapshot
       parameters:
-        - $ref: '#/components/parameters/CarIdPath'
+        - $ref: "#/components/parameters/CarIdPath"
       responses:
-        '200':
+        "200":
           description: Snapshot returned successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RaceControlSnapshotResponse'
+                $ref: "#/components/schemas/RaceControlSnapshotResponse"
               examples:
                 default:
                   value:
                     car:
                       id: 12
-                      number: '12'
+                      number: "12"
                       model: Isuzu D-Max Proto
                       status: Active
                     driver:
@@ -301,7 +301,7 @@ paths:
                           status: ok
                           channel: CH-9
                         - name: Steering Angle
-                          value: '-2.4°'
+                          value: "-2.4°"
                           status: ok
                           channel: CH-10
                         - name: Tire Pressure Monitor
@@ -350,21 +350,21 @@ paths:
                       - id: alert-1
                         message: Front Left Brake Temp High
                         severity: warning
-                        time: '2026-03-16T10:42:01Z'
+                        time: "2026-03-16T10:42:01Z"
                         acknowledged: false
                     connection:
                       state: synchronized
                       latencyMs: 24
                       boxName: Mini-Telemetry-V2
                       firmwareVersion: v3.12
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /cars/{carId}/alerts:
     get:
@@ -374,7 +374,7 @@ paths:
       description: Returns alerts for a selected vehicle.
       operationId: getCarAlerts
       parameters:
-        - $ref: '#/components/parameters/CarIdPath'
+        - $ref: "#/components/parameters/CarIdPath"
         - name: state
           in: query
           required: false
@@ -387,12 +387,12 @@ paths:
               - all
             default: active
       responses:
-        '200':
+        "200":
           description: Alerts returned successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AlertsResponse'
+                $ref: "#/components/schemas/AlertsResponse"
               examples:
                 default:
                   value:
@@ -400,16 +400,16 @@ paths:
                       - id: alert-1
                         message: Front Left Brake Temp High
                         severity: warning
-                        time: '2026-03-16T10:42:01Z'
+                        time: "2026-03-16T10:42:01Z"
                         acknowledged: false
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /cars/{carId}/alerts/acknowledge:
     post:
@@ -419,13 +419,13 @@ paths:
       description: Acknowledges one or more active alerts for a vehicle.
       operationId: acknowledgeAlerts
       parameters:
-        - $ref: '#/components/parameters/CarIdPath'
+        - $ref: "#/components/parameters/CarIdPath"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AcknowledgeAlertsRequest'
+              $ref: "#/components/schemas/AcknowledgeAlertsRequest"
             examples:
               default:
                 value:
@@ -433,26 +433,26 @@ paths:
                     - alert-1
                     - alert-2
       responses:
-        '200':
+        "200":
           description: Alerts acknowledged successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AcknowledgeAlertsResponse'
+                $ref: "#/components/schemas/AcknowledgeAlertsResponse"
               examples:
                 default:
                   value:
                     acknowledgedAlertIds:
                       - alert-1
                       - alert-2
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /users/{userId}/preferences/race-control-layout:
     get:
@@ -462,14 +462,14 @@ paths:
       description: Returns the saved main layout and per-category sensor layouts for a user.
       operationId: getRaceControlLayout
       parameters:
-        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: "#/components/parameters/UserIdPath"
       responses:
-        '200':
+        "200":
           description: Race control layout preferences returned successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RaceControlLayoutRequest'
+                $ref: "#/components/schemas/RaceControlLayoutRequest"
               examples:
                 default:
                   value:
@@ -481,17 +481,22 @@ paths:
                         h: 5
                     sensorLayouts:
                       POWERTRAIN:
-                        - i: '0'
+                        - i: "0"
                           x: 0
                           y: 0
                           w: 4
                           h: 2
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                    theme:
+                      primary: "#ffffff"
+                      accent: "#ff3333"
+                      accentGlow: "rgba(255,51,51,0.4)"
+                      brandGradientEnd: "#ffffff"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     put:
       tags:
         - Preferences
@@ -499,13 +504,13 @@ paths:
       description: Persists the main layout and per-category sensor layouts for a user.
       operationId: updateRaceControlLayout
       parameters:
-        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: "#/components/parameters/UserIdPath"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RaceControlLayoutRequest'
+              $ref: "#/components/schemas/RaceControlLayoutRequest"
             examples:
               default:
                 value:
@@ -517,26 +522,41 @@ paths:
                       h: 5
                   sensorLayouts:
                     POWERTRAIN:
-                      - i: '0'
+                      - i: "0"
                         x: 0
                         y: 0
                         w: 4
                         h: 2
+                  theme:
+                    primary: "#ffffff"
+                    accent: "#ff3333"
+                    accentGlow: "rgba(255,51,51,0.4)"
+                    brandGradientEnd: "#ffffff"
       responses:
-        '200':
+        "200":
           description: Layout preferences saved successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RaceControlLayoutResponse'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                $ref: "#/components/schemas/RaceControlLayoutResponse"
+              examples:
+                default:
+                  value:
+                    saved: true
+                    updatedAt: "2026-04-12T10:00:00Z"
+                    theme:
+                      primary: "#ffffff"
+                      accent: "#ff3333"
+                      accentGlow: "rgba(255,51,51,0.4)"
+                      brandGradientEnd: "#ffffff"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /users/{userId}/preferences/engineering-layout:
     get:
@@ -546,14 +566,14 @@ paths:
       description: Returns the saved Engineering dashboard layout and hidden widgets for a user.
       operationId: getEngineeringLayout
       parameters:
-        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: "#/components/parameters/UserIdPath"
       responses:
-        '200':
+        "200":
           description: Engineering layout preferences returned successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EngineeringLayoutRequest'
+                $ref: "#/components/schemas/EngineeringLayoutRequest"
               examples:
                 default:
                   value:
@@ -570,12 +590,12 @@ paths:
                         h: 2.3
                     hiddenWidgets:
                       - stress
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     put:
       tags:
         - Preferences
@@ -583,13 +603,13 @@ paths:
       description: Persists the Engineering dashboard layout and hidden widgets for a user.
       operationId: updateEngineeringLayout
       parameters:
-        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: "#/components/parameters/UserIdPath"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EngineeringLayoutRequest'
+              $ref: "#/components/schemas/EngineeringLayoutRequest"
             examples:
               default:
                 value:
@@ -607,20 +627,20 @@ paths:
                   hiddenWidgets:
                     - stress
       responses:
-        '200':
+        "200":
           description: Engineering layout preferences saved successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EngineeringLayoutResponse'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                $ref: "#/components/schemas/EngineeringLayoutResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /engineering/cars/{carId}/snapshot:
     get:
@@ -630,20 +650,20 @@ paths:
       description: Returns initial Engineering dashboard data for a selected vehicle.
       operationId: getEngineeringSnapshot
       parameters:
-        - $ref: '#/components/parameters/CarIdPath'
+        - $ref: "#/components/parameters/CarIdPath"
       responses:
-        '200':
+        "200":
           description: Engineering snapshot returned successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EngineeringSnapshotResponse'
+                $ref: "#/components/schemas/EngineeringSnapshotResponse"
               examples:
                 default:
                   value:
                     car:
                       id: 12
-                      number: '12'
+                      number: "12"
                       model: Isuzu D-Max Proto
                       status: Active
                     driver:
@@ -655,10 +675,10 @@ paths:
                       - id: eng-alert-1
                         message: Front Left Brake Temp High
                         severity: warning
-                        time: '2026-03-16T10:42:01Z'
+                        time: "2026-03-16T10:42:01Z"
                         acknowledged: false
                     telemetry:
-                      timestamp: '2026-03-16T10:42:01Z'
+                      timestamp: "2026-03-16T10:42:01Z"
                       heartRate: 136
                       respiration: 17
                       stressLevel: 52
@@ -706,43 +726,43 @@ paths:
                       position: P1
                       lap: 16
                       totalLaps: 67
-                      currentTime: '1:22.405'
-                      bestTime: '1:21.503'
+                      currentTime: "1:22.405"
+                      bestTime: "1:21.503"
                     gapAnalysis:
                       selectedLap: 16
                       totalLaps: 67
                       rivals:
-                        - number: '04'
+                        - number: "04"
                           name: Driver 04
                           gap: 2.145
                           isPos: true
                     map:
                       circuitName: Buriram International Circuit
                       activeFlag:
-                        turn: '3'
+                        turn: "3"
                         type: YELLOW
                       rivals:
                         - id: 1
-                          name: '99'
-                          color: '#ff1744'
+                          name: "99"
+                          color: "#ff1744"
                           progress: 0.54
                         - id: 2
-                          name: '18'
-                          color: '#00e5ff'
+                          name: "18"
+                          color: "#00e5ff"
                           progress: 0.62
                     cameras:
                       feeds:
                         FRONT: https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=800
                         COCKPIT: https://picsum.photos/seed/racing-cockpit/1400/800
                         REAR: https://images.unsplash.com/photo-1542228262-3d663b306a53?auto=format&fit=crop&q=80&w=800
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /engineering/cars/{carId}/recordings:
     post:
@@ -757,47 +777,47 @@ paths:
         via GET /recordings for the File & Video page.
       operationId: createEngineeringRecording
       parameters:
-        - $ref: '#/components/parameters/CarIdPath'
+        - $ref: "#/components/parameters/CarIdPath"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateScopedRecordingRequest'
+              $ref: "#/components/schemas/CreateScopedRecordingRequest"
             examples:
               default:
                 value:
                   sessionName: Buriram_Race_Session_01
-                  startDate: '2026-03-16T10:00:00Z'
-                  endDate: '2026-03-16T11:30:00Z'
+                  startDate: "2026-03-16T10:00:00Z"
+                  endDate: "2026-03-16T11:30:00Z"
                   targetFolderId: root
       responses:
-        '201':
+        "201":
           description: Recording session created successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RecordingSession'
+                $ref: "#/components/schemas/RecordingSession"
               examples:
                 default:
                   value:
                     id: rec-1742135237
                     vehicleId: 12
                     sessionName: Buriram_Race_Session_01
-                    startDate: '2026-03-16T10:00:00Z'
-                    endDate: '2026-03-16T11:30:00Z'
+                    startDate: "2026-03-16T10:00:00Z"
+                    endDate: "2026-03-16T11:30:00Z"
                     targetFolderId: root
                     status: processing
                     fileCount: 13
-                    createdAt: '2026-03-16T10:42:01Z'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                    createdAt: "2026-03-16T10:42:01Z"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   # -------------------------------------------------------------------------
   # Historical Telemetry
@@ -826,14 +846,14 @@ paths:
           schema:
             type: string
             format: date-time
-          example: '2026-03-16T10:00:00Z'
+          example: "2026-03-16T10:00:00Z"
         - name: endDate
           in: query
           required: true
           schema:
             type: string
             format: date-time
-          example: '2026-03-16T11:00:00Z'
+          example: "2026-03-16T11:00:00Z"
         - name: limit
           in: query
           required: false
@@ -843,18 +863,18 @@ paths:
             maximum: 10000
             default: 1000
       responses:
-        '200':
+        "200":
           description: Historical telemetry returned successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TelemetryHistoryResponse'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                $ref: "#/components/schemas/TelemetryHistoryResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   # -------------------------------------------------------------------------
   # Alert Thresholds
@@ -867,12 +887,12 @@ paths:
       description: Returns all configured alert thresholds. Used by the Settings page and all sensor pages.
       operationId: getAlertThresholds
       responses:
-        '200':
+        "200":
           description: Alert thresholds returned successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AlertThresholdsResponse'
+                $ref: "#/components/schemas/AlertThresholdsResponse"
               examples:
                 default:
                   value:
@@ -880,7 +900,7 @@ paths:
                       - id: engineTemp
                         metric: engineTemp
                         label: Engine Temp
-                        unit: '°C'
+                        unit: "°C"
                         warningValue: 105
                         criticalValue: 120
                       - id: oilPressure
@@ -889,10 +909,10 @@ paths:
                         unit: bar
                         warningValue: 1.5
                         criticalValue: 1.0
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     put:
       tags:
         - Alert Thresholds
@@ -904,9 +924,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AlertThresholdsUpdateRequest'
+              $ref: "#/components/schemas/AlertThresholdsUpdateRequest"
       responses:
-        '200':
+        "200":
           description: Alert thresholds updated successfully.
           content:
             application/json:
@@ -921,12 +941,12 @@ paths:
                   updatedAt:
                     type: string
                     format: date-time
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   # -------------------------------------------------------------------------
   # Recording Sessions
@@ -950,12 +970,12 @@ paths:
             type: integer
             minimum: 1
       responses:
-        '200':
+        "200":
           description: Recordings returned successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RecordingListResponse'
+                $ref: "#/components/schemas/RecordingListResponse"
               examples:
                 default:
                   value:
@@ -963,27 +983,27 @@ paths:
                       - id: rec-1742135237
                         vehicleId: 12
                         sessionName: Buriram_Race_Session_01
-                        startDate: '2026-03-16T10:00:00Z'
-                        endDate: '2026-03-16T11:30:00Z'
+                        startDate: "2026-03-16T10:00:00Z"
+                        endDate: "2026-03-16T11:30:00Z"
                         targetFolderId: root
                         status: ready
                         fileCount: 4
-                        createdAt: '2026-03-16T10:42:01Z'
+                        createdAt: "2026-03-16T10:42:01Z"
                         downloadUrl: https://storage.example.com/recordings/rec-1742135237.zip?signature=demo
                         archiveFileName: Buriram_Race_Session_01.zip
                       - id: rec-1742135401
                         vehicleId: 18
                         sessionName: Director_Incident_Window
-                        startDate: '2026-03-16T11:31:00Z'
-                        endDate: '2026-03-16T11:36:00Z'
+                        startDate: "2026-03-16T11:31:00Z"
+                        endDate: "2026-03-16T11:36:00Z"
                         targetFolderId: incident-review
                         status: processing
                         fileCount: 0
-                        createdAt: '2026-03-16T11:36:05Z'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                        createdAt: "2026-03-16T11:36:05Z"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     post:
       tags:
         - Recordings
@@ -999,40 +1019,40 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateRecordingRequest'
+              $ref: "#/components/schemas/CreateRecordingRequest"
             examples:
               default:
                 value:
                   vehicleId: 12
                   sessionName: Buriram_Race_Session_01
-                  startDate: '2026-03-16T10:00:00Z'
-                  endDate: '2026-03-16T11:30:00Z'
+                  startDate: "2026-03-16T10:00:00Z"
+                  endDate: "2026-03-16T11:30:00Z"
                   targetFolderId: root
       responses:
-        '201':
+        "201":
           description: Recording session created.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RecordingSession'
+                $ref: "#/components/schemas/RecordingSession"
               examples:
                 default:
                   value:
                     id: rec-1742135237
                     vehicleId: 12
                     sessionName: Buriram_Race_Session_01
-                    startDate: '2026-03-16T10:00:00Z'
-                    endDate: '2026-03-16T11:30:00Z'
+                    startDate: "2026-03-16T10:00:00Z"
+                    endDate: "2026-03-16T11:30:00Z"
                     targetFolderId: root
                     status: processing
                     fileCount: 0
-                    createdAt: '2026-03-16T10:42:01Z'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                    createdAt: "2026-03-16T10:42:01Z"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /recordings/{recordingId}/download:
     get:
@@ -1051,32 +1071,32 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Download URL resolved successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RecordingDownloadResponse'
+                $ref: "#/components/schemas/RecordingDownloadResponse"
               examples:
                 ready:
                   value:
                     recordingId: rec-1742135237
                     status: ready
                     url: https://storage.example.com/recordings/rec-1742135237.zip?signature=demo
-                    expiresAt: '2026-03-16T12:45:00Z'
+                    expiresAt: "2026-03-16T12:45:00Z"
                     fileName: Buriram_Race_Session_01.zip
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '409':
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "409":
           description: Recording is not yet ready for download.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorEnvelope'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /files/tree:
     get:
@@ -1089,12 +1109,12 @@ paths:
         tree shown in the frontend.
       operationId: getFileTree
       responses:
-        '200':
+        "200":
           description: File hierarchy returned successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FileTreeResponse'
+                $ref: "#/components/schemas/FileTreeResponse"
               examples:
                 default:
                   value:
@@ -1103,23 +1123,23 @@ paths:
                         parentId: root
                         name: Buriram GT3 Series
                         type: folder
-                        date: '2026-03-16T10:00:00Z'
+                        date: "2026-03-16T10:00:00Z"
                       - id: rec-folder-1742135237
                         parentId: event-1
                         name: Buriram_Race_Session_01
                         type: folder
-                        date: '2026-03-16T10:42:01Z'
+                        date: "2026-03-16T10:42:01Z"
                       - id: rec-zip-1742135237
                         parentId: rec-folder-1742135237
                         name: Buriram_Race_Session_01.zip
                         type: zip
                         size: 412 MB
-                        date: '2026-03-16T10:45:00Z'
+                        date: "2026-03-16T10:45:00Z"
                         downloadUrl: https://storage.example.com/recordings/rec-1742135237.zip?signature=demo
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /files/{fileId}:
     delete:
@@ -1142,18 +1162,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DeleteFileRequest'
+              $ref: "#/components/schemas/DeleteFileRequest"
             examples:
               default:
                 value:
                   password: Admin@123
       responses:
-        '200':
+        "200":
           description: Delete command completed successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeleteFileResponse'
+                $ref: "#/components/schemas/DeleteFileResponse"
               examples:
                 default:
                   value:
@@ -1162,18 +1182,18 @@ paths:
                       - rec-zip-1742135237
                     deletedRecordingIds:
                       - rec-1742135237
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
           description: Invalid delete password.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorEnvelope'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   # -------------------------------------------------------------------------
   # Live Stream
@@ -1186,7 +1206,7 @@ paths:
       description: Returns the HTTP(S) stream URL for the onboard camera of a vehicle.
       operationId: getVehicleStreamUrl
       parameters:
-        - $ref: '#/components/parameters/VehicleIdPath'
+        - $ref: "#/components/parameters/VehicleIdPath"
         - name: camera
           in: query
           required: false
@@ -1195,7 +1215,7 @@ paths:
             type: string
             enum: [FRONT, COCKPIT, REAR]
       responses:
-        '200':
+        "200":
           description: Stream URL returned.
           content:
             application/json:
@@ -1223,12 +1243,12 @@ paths:
                     camera: FRONT
                     streamUrl: https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
                     streamMimeType: video/mp4
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   # -------------------------------------------------------------------------
   # Auth
@@ -1245,12 +1265,12 @@ paths:
         server restarts.
       operationId: getAuthenticatedSession
       responses:
-        '200':
+        "200":
           description: Authenticated session returned successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthSessionResponse'
+                $ref: "#/components/schemas/AuthSessionResponse"
               examples:
                 admin:
                   summary: Admin session
@@ -1345,10 +1365,10 @@ paths:
                       iss: isuzu-racing-mock-auth
                       aud: racing-platform-fe
                     landingPage: /engineering
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /auth/login:
     post:
@@ -1365,7 +1385,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/MockLoginRequest'
+              $ref: "#/components/schemas/MockLoginRequest"
             examples:
               engineer:
                 value:
@@ -1376,19 +1396,19 @@ paths:
                   email: director@isuzu.com
                   password: Director@123
       responses:
-        '200':
+        "200":
           description: Mock login succeeded.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MockLoginResponse'
+                $ref: "#/components/schemas/MockLoginResponse"
               examples:
                 engineer:
                   value:
                     authenticated: true
                     accessToken: <jwt-issued-at-runtime>
                     tokenType: Bearer
-                    expiresAt: '2026-04-06T18:13:42.000Z'
+                    expiresAt: "2026-04-06T18:13:42.000Z"
                     user:
                       id: user-engineer-1
                       name: Trackside Engineer
@@ -1406,7 +1426,7 @@ paths:
                     authenticated: true
                     accessToken: <jwt-issued-at-runtime>
                     tokenType: Bearer
-                    expiresAt: '2026-04-06T18:13:51.000Z'
+                    expiresAt: "2026-04-06T18:13:51.000Z"
                     user:
                       id: user-director-1
                       name: Race Director
@@ -1419,19 +1439,19 @@ paths:
                         administration: false
                         directorThresholds: true
                     landingPage: /overview-director
-        '401':
+        "401":
           description: Mock credentials are invalid.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MockLoginFailureResponse'
+                $ref: "#/components/schemas/MockLoginFailureResponse"
               examples:
                 invalid:
                   value:
                     authenticated: false
                     error: invalid mock credentials
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   # -------------------------------------------------------------------------
   # Administration – Events
@@ -1443,16 +1463,16 @@ paths:
       summary: List events
       operationId: listEvents
       responses:
-        '200':
+        "200":
           description: Events returned successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventListResponse'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                $ref: "#/components/schemas/EventListResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     post:
       tags:
         - Administration
@@ -1463,20 +1483,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateEventRequest'
+              $ref: "#/components/schemas/CreateEventRequest"
       responses:
-        '201':
+        "201":
           description: Event created.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RaceEvent'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                $ref: "#/components/schemas/RaceEvent"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /administration/events/{id}:
     put:
@@ -1485,44 +1505,44 @@ paths:
       summary: Update event
       operationId: updateEvent
       parameters:
-        - $ref: '#/components/parameters/ResourceIdPath'
+        - $ref: "#/components/parameters/ResourceIdPath"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateEventRequest'
+              $ref: "#/components/schemas/CreateEventRequest"
       responses:
-        '200':
+        "200":
           description: Event updated.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RaceEvent'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                $ref: "#/components/schemas/RaceEvent"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     delete:
       tags:
         - Administration
       summary: Delete event
       operationId: deleteEvent
       parameters:
-        - $ref: '#/components/parameters/ResourceIdPath'
+        - $ref: "#/components/parameters/ResourceIdPath"
       responses:
-        '204':
+        "204":
           description: Event deleted.
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   # -------------------------------------------------------------------------
   # Administration – Users
@@ -1538,12 +1558,12 @@ paths:
         label used in the current UI.
       operationId: listUsers
       responses:
-        '200':
+        "200":
           description: Users returned successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserListResponse'
+                $ref: "#/components/schemas/UserListResponse"
               examples:
                 default:
                   value:
@@ -1563,10 +1583,10 @@ paths:
                         email: engineer@isuzu.com
                         role: Trackside Engineer
                         access: Engineer
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   # -------------------------------------------------------------------------
   # Administration – Garages
@@ -1578,16 +1598,16 @@ paths:
       summary: List garages
       operationId: listGarages
       responses:
-        '200':
+        "200":
           description: Garages returned successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GarageListResponse'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                $ref: "#/components/schemas/GarageListResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     post:
       tags:
         - Administration
@@ -1598,20 +1618,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateGarageRequest'
+              $ref: "#/components/schemas/CreateGarageRequest"
       responses:
-        '201':
+        "201":
           description: Garage created.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Garage'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                $ref: "#/components/schemas/Garage"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /administration/garages/{id}:
     delete:
@@ -1620,16 +1640,16 @@ paths:
       summary: Delete garage
       operationId: deleteGarage
       parameters:
-        - $ref: '#/components/parameters/ResourceIdPath'
+        - $ref: "#/components/parameters/ResourceIdPath"
       responses:
-        '204':
+        "204":
           description: Garage deleted.
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   # -------------------------------------------------------------------------
   # Administration – Vehicles (full CRUD, extends read-only /fleet)
@@ -1641,7 +1661,7 @@ paths:
       summary: List vehicles (admin)
       operationId: listVehiclesAdmin
       responses:
-        '200':
+        "200":
           description: Vehicles returned successfully.
           content:
             application/json:
@@ -1653,11 +1673,11 @@ paths:
                   vehicles:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Car'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                      $ref: "#/components/schemas/Car"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     post:
       tags:
         - Administration
@@ -1668,20 +1688,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateVehicleRequest'
+              $ref: "#/components/schemas/CreateVehicleRequest"
       responses:
-        '201':
+        "201":
           description: Vehicle created.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Car'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                $ref: "#/components/schemas/Car"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /administration/vehicles/{id}:
     put:
@@ -1690,44 +1710,44 @@ paths:
       summary: Update vehicle
       operationId: updateVehicle
       parameters:
-        - $ref: '#/components/parameters/ResourceIdPath'
+        - $ref: "#/components/parameters/ResourceIdPath"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateVehicleRequest'
+              $ref: "#/components/schemas/CreateVehicleRequest"
       responses:
-        '200':
+        "200":
           description: Vehicle updated.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Car'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                $ref: "#/components/schemas/Car"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     delete:
       tags:
         - Administration
       summary: Delete vehicle
       operationId: deleteVehicle
       parameters:
-        - $ref: '#/components/parameters/ResourceIdPath'
+        - $ref: "#/components/parameters/ResourceIdPath"
       responses:
-        '204':
+        "204":
           description: Vehicle deleted.
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /tasks:
     get:
@@ -1736,7 +1756,7 @@ paths:
       summary: List all tasks
       operationId: listTasks
       responses:
-        '200':
+        "200":
           description: Task list returned successfully.
           content:
             application/json:
@@ -1748,7 +1768,7 @@ paths:
                   tasks:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Task'
+                      $ref: "#/components/schemas/Task"
               examples:
                 default:
                   value:
@@ -1759,24 +1779,24 @@ paths:
                         status: TODO
                         priority: HIGH
                         assignee: Trackside Engineer
-                        dueDate: '2026-03-17T14:00:00Z'
+                        dueDate: "2026-03-17T14:00:00Z"
                       - id: task-2
                         title: Replace FL brake pads
                         description: Front-left brake temp exceeded threshold on lap 18. Schedule pad change.
                         status: IN_PROGRESS
                         priority: CRITICAL
                         assignee: Platform Administrator
-                        dueDate: '2026-03-17T12:30:00Z'
+                        dueDate: "2026-03-17T12:30:00Z"
                       - id: task-3
                         title: Review tire pressure data
                         description: Analyze tire pressure trends from last session for optimal cold-start strategy.
                         status: DONE
                         priority: MEDIUM
                         assignee: Trackside Engineer
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     post:
       tags:
         - Tasks
@@ -1787,29 +1807,29 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TaskCreate'
+              $ref: "#/components/schemas/TaskCreate"
       responses:
-        '201':
+        "201":
           description: Task created successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Task'
+                $ref: "#/components/schemas/Task"
               examples:
                 default:
                   value:
                     id: task-new
                     title: New task
-                    description: ''
+                    description: ""
                     status: TODO
                     priority: LOW
                     assignee: Unassigned
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /tasks/{id}:
     patch:
@@ -1828,14 +1848,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TaskCreate'
+              $ref: "#/components/schemas/TaskCreate"
       responses:
-        '200':
+        "200":
           description: Task updated successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Task'
+                $ref: "#/components/schemas/Task"
               examples:
                 default:
                   value:
@@ -1845,14 +1865,14 @@ paths:
                     status: DONE
                     priority: HIGH
                     assignee: Trackside Engineer
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     delete:
       tags:
         - Tasks
@@ -1865,14 +1885,14 @@ paths:
           schema:
             type: string
       responses:
-        '204':
+        "204":
           description: Task deleted successfully.
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
 components:
   securitySchemes:
@@ -1932,7 +1952,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
+            $ref: "#/components/schemas/ErrorEnvelope"
           examples:
             default:
               value:
@@ -1946,7 +1966,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
+            $ref: "#/components/schemas/ErrorEnvelope"
           examples:
             default:
               value:
@@ -1958,7 +1978,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
+            $ref: "#/components/schemas/ErrorEnvelope"
           examples:
             default:
               value:
@@ -1970,7 +1990,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
+            $ref: "#/components/schemas/ErrorEnvelope"
           examples:
             default:
               value:
@@ -2043,11 +2063,11 @@ components:
           type: string
           format: email
         role:
-          $ref: '#/components/schemas/UserRole'
+          $ref: "#/components/schemas/UserRole"
         access:
-          $ref: '#/components/schemas/MockAccessLevel'
+          $ref: "#/components/schemas/MockAccessLevel"
         permissions:
-          $ref: '#/components/schemas/UserPermissions'
+          $ref: "#/components/schemas/UserPermissions"
         iat:
           type: integer
           format: int64
@@ -2075,9 +2095,9 @@ components:
           type: boolean
           const: true
         user:
-          $ref: '#/components/schemas/MockAuthenticatedUser'
+          $ref: "#/components/schemas/MockAuthenticatedUser"
         claims:
-          $ref: '#/components/schemas/JwtClaims'
+          $ref: "#/components/schemas/JwtClaims"
         landingPage:
           type: string
 
@@ -2115,14 +2135,14 @@ components:
         name:
           type: string
         role:
-          $ref: '#/components/schemas/UserRole'
+          $ref: "#/components/schemas/UserRole"
         email:
           type: string
           format: email
         access:
-          $ref: '#/components/schemas/MockAccessLevel'
+          $ref: "#/components/schemas/MockAccessLevel"
         permissions:
-          $ref: '#/components/schemas/UserPermissions'
+          $ref: "#/components/schemas/UserPermissions"
 
     MockLoginResponse:
       type: object
@@ -2148,7 +2168,7 @@ components:
           type: string
           format: date-time
         user:
-          $ref: '#/components/schemas/MockAuthenticatedUser'
+          $ref: "#/components/schemas/MockAuthenticatedUser"
         landingPage:
           type: string
 
@@ -2192,7 +2212,7 @@ components:
           type: object
           description: Per-metric threshold configuration keyed by metric name.
           additionalProperties:
-            $ref: '#/components/schemas/DirectorThresholdMetric'
+            $ref: "#/components/schemas/DirectorThresholdMetric"
         updatedAt:
           type: string
           format: date-time
@@ -2207,7 +2227,7 @@ components:
           type: object
           description: Full replacement set of per-metric threshold configuration.
           additionalProperties:
-            $ref: '#/components/schemas/DirectorThresholdMetric'
+            $ref: "#/components/schemas/DirectorThresholdMetric"
 
     DirectorRefreshRateResponse:
       type: object
@@ -2256,7 +2276,7 @@ components:
         cars:
           type: array
           items:
-            $ref: '#/components/schemas/Car'
+            $ref: "#/components/schemas/Car"
 
     DriverListResponse:
       type: object
@@ -2266,7 +2286,7 @@ components:
         drivers:
           type: array
           items:
-            $ref: '#/components/schemas/Driver'
+            $ref: "#/components/schemas/Driver"
 
     AlertsResponse:
       type: object
@@ -2276,7 +2296,7 @@ components:
         alerts:
           type: array
           items:
-            $ref: '#/components/schemas/Alert'
+            $ref: "#/components/schemas/Alert"
 
     AcknowledgeAlertsRequest:
       type: object
@@ -2309,35 +2329,58 @@ components:
         - connection
       properties:
         car:
-          $ref: '#/components/schemas/Car'
+          $ref: "#/components/schemas/Car"
         driver:
-          $ref: '#/components/schemas/Driver'
+          $ref: "#/components/schemas/Driver"
         sensorCategories:
-          $ref: '#/components/schemas/SensorCategories'
+          $ref: "#/components/schemas/SensorCategories"
         alerts:
           type: array
           items:
-            $ref: '#/components/schemas/Alert'
+            $ref: "#/components/schemas/Alert"
         connection:
-          $ref: '#/components/schemas/ConnectionStatus'
+          $ref: "#/components/schemas/ConnectionStatus"
 
     RaceControlLayoutRequest:
       type: object
       required:
         - mainLayout
         - sensorLayouts
+        - theme
       properties:
         mainLayout:
           type: array
           items:
-            $ref: '#/components/schemas/LayoutItem'
+            $ref: "#/components/schemas/LayoutItem"
         sensorLayouts:
-          $ref: '#/components/schemas/SensorLayouts'
+          $ref: "#/components/schemas/SensorLayouts"
+        theme:
+          type: object
+          description: User theme color preferences for Race Control UI
+          required:
+            - primary
+            - accent
+            - accentGlow
+            - brandGradientEnd
+          properties:
+            primary:
+              type: string
+              example: "#ffffff"
+            accent:
+              type: string
+              example: "#ff3333"
+            accentGlow:
+              type: string
+              example: "rgba(255,51,51,0.4)"
+            brandGradientEnd:
+              type: string
+              example: "#ffffff"
 
     RaceControlLayoutResponse:
       type: object
       required:
         - saved
+        - theme
       properties:
         saved:
           type: boolean
@@ -2345,6 +2388,27 @@ components:
         updatedAt:
           type: string
           format: date-time
+        theme:
+          type: object
+          description: User theme color preferences for Race Control UI
+          required:
+            - primary
+            - accent
+            - accentGlow
+            - brandGradientEnd
+          properties:
+            primary:
+              type: string
+              example: "#ffffff"
+            accent:
+              type: string
+              example: "#ff3333"
+            accentGlow:
+              type: string
+              example: "rgba(255,51,51,0.4)"
+            brandGradientEnd:
+              type: string
+              example: "#ffffff"
 
     EngineeringLayoutItem:
       type: object
@@ -2379,7 +2443,7 @@ components:
         layout:
           type: array
           items:
-            $ref: '#/components/schemas/EngineeringLayoutItem'
+            $ref: "#/components/schemas/EngineeringLayoutItem"
         hiddenWidgets:
           type: array
           items:
@@ -2411,29 +2475,29 @@ components:
         - cameras
       properties:
         car:
-          $ref: '#/components/schemas/Car'
+          $ref: "#/components/schemas/Car"
         driver:
-          $ref: '#/components/schemas/Driver'
+          $ref: "#/components/schemas/Driver"
         alerts:
           type: array
           items:
-            $ref: '#/components/schemas/Alert'
+            $ref: "#/components/schemas/Alert"
         telemetry:
-          $ref: '#/components/schemas/EngineeringTelemetryState'
+          $ref: "#/components/schemas/EngineeringTelemetryState"
         telemetryHistory:
           type: array
           items:
-            $ref: '#/components/schemas/EngineeringTelemetryState'
+            $ref: "#/components/schemas/EngineeringTelemetryState"
         conditions:
-          $ref: '#/components/schemas/EngineeringConditions'
+          $ref: "#/components/schemas/EngineeringConditions"
         status:
-          $ref: '#/components/schemas/EngineeringStatus'
+          $ref: "#/components/schemas/EngineeringStatus"
         gapAnalysis:
-          $ref: '#/components/schemas/EngineeringGapAnalysis'
+          $ref: "#/components/schemas/EngineeringGapAnalysis"
         map:
-          $ref: '#/components/schemas/EngineeringMapState'
+          $ref: "#/components/schemas/EngineeringMapState"
         cameras:
-          $ref: '#/components/schemas/EngineeringCameras'
+          $ref: "#/components/schemas/EngineeringCameras"
 
     CreateScopedRecordingRequest:
       type: object
@@ -2455,7 +2519,7 @@ components:
         createFolderName:
           type: string
         sourcePage:
-          $ref: '#/components/schemas/RecordingSourcePage'
+          $ref: "#/components/schemas/RecordingSourcePage"
         requestedBy:
           type: string
 
@@ -2479,7 +2543,7 @@ components:
         color:
           type: string
           description: Hex color code assigned to this vehicle for map and chart rendering.
-          example: '#ff1744'
+          example: "#ff1744"
 
     Driver:
       type: object
@@ -2536,19 +2600,19 @@ components:
         POWERTRAIN:
           type: array
           items:
-            $ref: '#/components/schemas/SensorReading'
+            $ref: "#/components/schemas/SensorReading"
         CHASSIS:
           type: array
           items:
-            $ref: '#/components/schemas/SensorReading'
+            $ref: "#/components/schemas/SensorReading"
         AERO:
           type: array
           items:
-            $ref: '#/components/schemas/SensorReading'
+            $ref: "#/components/schemas/SensorReading"
         ELECTRONICS:
           type: array
           items:
-            $ref: '#/components/schemas/SensorReading'
+            $ref: "#/components/schemas/SensorReading"
 
     Task:
       type: object
@@ -2730,7 +2794,7 @@ components:
         heading:
           type: number
         tires:
-          $ref: '#/components/schemas/EngineeringTires'
+          $ref: "#/components/schemas/EngineeringTires"
 
     EngineeringConditions:
       type: object
@@ -2787,7 +2851,7 @@ components:
         rivals:
           type: array
           items:
-            $ref: '#/components/schemas/EngineeringGapRival'
+            $ref: "#/components/schemas/EngineeringGapRival"
 
     EngineeringGapRival:
       type: object
@@ -2817,12 +2881,12 @@ components:
           type: string
         activeFlag:
           oneOf:
-            - type: 'null'
-            - $ref: '#/components/schemas/EngineeringFlagState'
+            - type: "null"
+            - $ref: "#/components/schemas/EngineeringFlagState"
         rivals:
           type: array
           items:
-            $ref: '#/components/schemas/EngineeringMapRival'
+            $ref: "#/components/schemas/EngineeringMapRival"
 
     EngineeringFlagState:
       type: object
@@ -2868,7 +2932,7 @@ components:
         - feeds
       properties:
         feeds:
-          $ref: '#/components/schemas/EngineeringCameraFeeds'
+          $ref: "#/components/schemas/EngineeringCameraFeeds"
 
     EngineeringCameraFeeds:
       type: object
@@ -2896,13 +2960,13 @@ components:
         - rr
       properties:
         fl:
-          $ref: '#/components/schemas/EngineeringTireTelemetry'
+          $ref: "#/components/schemas/EngineeringTireTelemetry"
         fr:
-          $ref: '#/components/schemas/EngineeringTireTelemetry'
+          $ref: "#/components/schemas/EngineeringTireTelemetry"
         rl:
-          $ref: '#/components/schemas/EngineeringTireTelemetry'
+          $ref: "#/components/schemas/EngineeringTireTelemetry"
         rr:
-          $ref: '#/components/schemas/EngineeringTireTelemetry'
+          $ref: "#/components/schemas/EngineeringTireTelemetry"
 
     EngineeringTireTelemetry:
       type: object
@@ -2927,19 +2991,19 @@ components:
         POWERTRAIN:
           type: array
           items:
-            $ref: '#/components/schemas/LayoutItem'
+            $ref: "#/components/schemas/LayoutItem"
         CHASSIS:
           type: array
           items:
-            $ref: '#/components/schemas/LayoutItem'
+            $ref: "#/components/schemas/LayoutItem"
         AERO:
           type: array
           items:
-            $ref: '#/components/schemas/LayoutItem'
+            $ref: "#/components/schemas/LayoutItem"
         ELECTRONICS:
           type: array
           items:
-            $ref: '#/components/schemas/LayoutItem'
+            $ref: "#/components/schemas/LayoutItem"
 
     LayoutItem:
       type: object
@@ -2983,7 +3047,7 @@ components:
         - error
       properties:
         error:
-          $ref: '#/components/schemas/ErrorPayload'
+          $ref: "#/components/schemas/ErrorPayload"
 
     ErrorPayload:
       type: object
@@ -3011,7 +3075,7 @@ components:
         points:
           type: array
           items:
-            $ref: '#/components/schemas/VehicleTelemetryFrame'
+            $ref: "#/components/schemas/VehicleTelemetryFrame"
 
     VehicleTelemetryFrame:
       type: object
@@ -3106,7 +3170,7 @@ components:
         thresholds:
           type: array
           items:
-            $ref: '#/components/schemas/AlertThreshold'
+            $ref: "#/components/schemas/AlertThreshold"
 
     AlertThresholdsUpdateRequest:
       type: object
@@ -3117,7 +3181,7 @@ components:
           type: array
           minItems: 1
           items:
-            $ref: '#/components/schemas/AlertThreshold'
+            $ref: "#/components/schemas/AlertThreshold"
 
     RecordingSession:
       type: object
@@ -3165,7 +3229,7 @@ components:
         archiveFileName:
           type: string
         sourcePage:
-          $ref: '#/components/schemas/RecordingSourcePage'
+          $ref: "#/components/schemas/RecordingSourcePage"
         requestedBy:
           type: string
 
@@ -3193,7 +3257,7 @@ components:
         createFolderName:
           type: string
         sourcePage:
-          $ref: '#/components/schemas/RecordingSourcePage'
+          $ref: "#/components/schemas/RecordingSourcePage"
         requestedBy:
           type: string
 
@@ -3211,7 +3275,7 @@ components:
         files:
           type: array
           items:
-            $ref: '#/components/schemas/StoredFileNode'
+            $ref: "#/components/schemas/StoredFileNode"
 
     StoredFileNode:
       type: object
@@ -3297,7 +3361,7 @@ components:
         recordings:
           type: array
           items:
-            $ref: '#/components/schemas/RecordingSession'
+            $ref: "#/components/schemas/RecordingSession"
 
     RaceEvent:
       type: object
@@ -3369,7 +3433,7 @@ components:
         events:
           type: array
           items:
-            $ref: '#/components/schemas/RaceEvent'
+            $ref: "#/components/schemas/RaceEvent"
 
     AdminUser:
       type: object
@@ -3391,7 +3455,7 @@ components:
           type: string
           format: email
         access:
-          $ref: '#/components/schemas/MockAccessLevel'
+          $ref: "#/components/schemas/MockAccessLevel"
 
     UserListResponse:
       type: object
@@ -3401,7 +3465,7 @@ components:
         users:
           type: array
           items:
-            $ref: '#/components/schemas/AdminUser'
+            $ref: "#/components/schemas/AdminUser"
 
     Garage:
       type: object
@@ -3451,7 +3515,7 @@ components:
         garages:
           type: array
           items:
-            $ref: '#/components/schemas/Garage'
+            $ref: "#/components/schemas/Garage"
 
     CreateVehicleRequest:
       type: object
