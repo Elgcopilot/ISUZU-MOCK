@@ -30,7 +30,7 @@ defaultContentType: application/json
 
 servers:
   telemetry:
-    url: '{wsEndpoint}'
+    url: "{wsEndpoint}"
     protocol: socket.io
     description: Shared Socket.IO endpoint for all realtime channels.
     variables:
@@ -47,14 +47,14 @@ channels:
       operationId: subscribeChannel
       summary: Subscribe to a realtime channel for a specific vehicle/driver/event.
       message:
-        $ref: '#/components/messages/SubscribeMessage'
+        $ref: "#/components/messages/SubscribeMessage"
 
   unsubscribe:
     publish:
       operationId: unsubscribeChannel
       summary: Cancel a channel subscription.
       message:
-        $ref: '#/components/messages/UnsubscribeMessage'
+        $ref: "#/components/messages/UnsubscribeMessage"
 
   # -------------------------------------------------------------------------
   # Server → Client (subscribe)
@@ -64,49 +64,49 @@ channels:
       operationId: onVehicleTelemetry
       summary: Full telemetry frame for a subscribed vehicle. Delivered at the configured Hz rate.
       message:
-        $ref: '#/components/messages/VehicleTelemetryMessage'
+        $ref: "#/components/messages/VehicleTelemetryMessage"
 
   vehicle.alert:
     subscribe:
       operationId: onVehicleAlert
       summary: Alert raised for a subscribed vehicle. Includes severity and acknowledgement state.
       message:
-        $ref: '#/components/messages/VehicleAlertMessage'
+        $ref: "#/components/messages/VehicleAlertMessage"
 
   vehicle.status:
     subscribe:
       operationId: onVehicleStatus
       summary: Connection health and race position for a subscribed vehicle.
       message:
-        $ref: '#/components/messages/VehicleStatusMessage'
+        $ref: "#/components/messages/VehicleStatusMessage"
 
   vehicle.location:
     subscribe:
       operationId: onVehicleLocation
       summary: GPS coordinates and track lap progress for map widgets.
       message:
-        $ref: '#/components/messages/VehicleLocationMessage'
+        $ref: "#/components/messages/VehicleLocationMessage"
 
   vehicle.biometric:
     subscribe:
       operationId: onVehicleBiometric
       summary: Driver biometric data (heart rate, respiration, stress level).
       message:
-        $ref: '#/components/messages/VehicleBiometricMessage'
+        $ref: "#/components/messages/VehicleBiometricMessage"
 
   vehicle.anomaly:
     subscribe:
       operationId: onVehicleAnomaly
       summary: Threshold breach detection event used by Director and Overview-Director pages.
       message:
-        $ref: '#/components/messages/VehicleAnomalyMessage'
+        $ref: "#/components/messages/VehicleAnomalyMessage"
 
   vehicle.sensors:
     subscribe:
       operationId: onVehicleSensors
       summary: Display-ready sensor category frames for the Race Control sensor panel. Delivered at 2 Hz alongside vehicle.telemetry.
       message:
-        $ref: '#/components/messages/VehicleSensorsMessage'
+        $ref: "#/components/messages/VehicleSensorsMessage"
 
 components:
   messages:
@@ -115,63 +115,63 @@ components:
       messageId: subscribeMessage
       title: Subscribe to Channel
       payload:
-        $ref: '#/components/schemas/WsSubscribePayload'
+        $ref: "#/components/schemas/WsSubscribePayload"
 
     UnsubscribeMessage:
       name: unsubscribe
       messageId: unsubscribeMessage
       title: Unsubscribe from Channel
       payload:
-        $ref: '#/components/schemas/WsSubscribePayload'
+        $ref: "#/components/schemas/WsSubscribePayload"
 
     VehicleTelemetryMessage:
       name: vehicle.telemetry
       messageId: vehicleTelemetryMessage
       title: Vehicle Telemetry Frame
       payload:
-        $ref: '#/components/schemas/VehicleTelemetry'
+        $ref: "#/components/schemas/VehicleTelemetry"
 
     VehicleAlertMessage:
       name: vehicle.alert
       messageId: vehicleAlertMessage
       title: Vehicle Alert Event
       payload:
-        $ref: '#/components/schemas/VehicleAlert'
+        $ref: "#/components/schemas/VehicleAlert"
 
     VehicleStatusMessage:
       name: vehicle.status
       messageId: vehicleStatusMessage
       title: Vehicle Status Update
       payload:
-        $ref: '#/components/schemas/VehicleStatus'
+        $ref: "#/components/schemas/VehicleStatus"
 
     VehicleLocationMessage:
       name: vehicle.location
       messageId: vehicleLocationMessage
       title: Vehicle Location Frame
       payload:
-        $ref: '#/components/schemas/VehicleLocation'
+        $ref: "#/components/schemas/VehicleLocation"
 
     VehicleBiometricMessage:
       name: vehicle.biometric
       messageId: vehicleBiometricMessage
       title: Driver Biometric Frame
       payload:
-        $ref: '#/components/schemas/DriverBiometric'
+        $ref: "#/components/schemas/DriverBiometric"
 
     VehicleAnomalyMessage:
       name: vehicle.anomaly
       messageId: vehicleAnomalyMessage
       title: Vehicle Anomaly Detection Event
       payload:
-        $ref: '#/components/schemas/VehicleAnomaly'
+        $ref: "#/components/schemas/VehicleAnomaly"
 
     VehicleSensorsMessage:
       name: vehicle.sensors
       messageId: vehicleSensorsMessage
       title: Vehicle Sensor Category Frame
       payload:
-        $ref: '#/components/schemas/VehicleSensorUpdate'
+        $ref: "#/components/schemas/VehicleSensorUpdate"
 
   schemas:
     WsSubscribePayload:
@@ -251,6 +251,10 @@ components:
         timestamp:
           type: string
           format: date-time
+        distanceMeters:
+          type: number
+          minimum: 0
+          description: Backend-provided cumulative race distance in meters.
         speed:
           type: number
           description: km/h
@@ -309,13 +313,13 @@ components:
             - rr
           properties:
             fl:
-              $ref: '#/components/schemas/TireTelemetry'
+              $ref: "#/components/schemas/TireTelemetry"
             fr:
-              $ref: '#/components/schemas/TireTelemetry'
+              $ref: "#/components/schemas/TireTelemetry"
             rl:
-              $ref: '#/components/schemas/TireTelemetry'
+              $ref: "#/components/schemas/TireTelemetry"
             rr:
-              $ref: '#/components/schemas/TireTelemetry'
+              $ref: "#/components/schemas/TireTelemetry"
 
     VehicleAlert:
       type: object
@@ -379,6 +383,18 @@ components:
           type: string
           examples:
             - P1
+        positionNumber:
+          type: integer
+          minimum: 1
+          description: Numeric race order position (authoritative ordering key).
+        deltaToAheadMeters:
+          type: number
+          minimum: 0
+          description: Distance to the car directly ahead, in meters.
+        deltaToLeaderMeters:
+          type: number
+          minimum: 0
+          description: Distance to race leader, in meters.
         lap:
           type: integer
           minimum: 1
@@ -388,11 +404,11 @@ components:
         currentTime:
           type: string
           examples:
-            - '1:22.405'
+            - "1:22.405"
         bestTime:
           type: string
           examples:
-            - '1:21.503'
+            - "1:21.503"
         timestamp:
           type: string
           format: date-time
@@ -431,6 +447,14 @@ components:
           type: number
           minimum: 0
           maximum: 1
+        progressContinuous:
+          type: number
+          minimum: 0
+          description: Continuous progress = lap + lapProgress.
+        trackLengthMeters:
+          type: number
+          minimum: 1
+          description: Circuit length in meters used for distance-based comparisons.
 
     DriverBiometric:
       type: object
@@ -540,19 +564,19 @@ components:
             the vehicle.telemetry frame (rpm, speed, throttle, lambda, fuelPressure, airflow, ignitionTiming).
           properties:
             rpm:
-              $ref: '#/components/schemas/MetricAnomalySummary'
+              $ref: "#/components/schemas/MetricAnomalySummary"
             speed:
-              $ref: '#/components/schemas/MetricAnomalySummary'
+              $ref: "#/components/schemas/MetricAnomalySummary"
             throttle:
-              $ref: '#/components/schemas/MetricAnomalySummary'
+              $ref: "#/components/schemas/MetricAnomalySummary"
             lambda:
-              $ref: '#/components/schemas/MetricAnomalySummary'
+              $ref: "#/components/schemas/MetricAnomalySummary"
             fuelPressure:
-              $ref: '#/components/schemas/MetricAnomalySummary'
+              $ref: "#/components/schemas/MetricAnomalySummary"
             airflow:
-              $ref: '#/components/schemas/MetricAnomalySummary'
+              $ref: "#/components/schemas/MetricAnomalySummary"
             ignitionTiming:
-              $ref: '#/components/schemas/MetricAnomalySummary'
+              $ref: "#/components/schemas/MetricAnomalySummary"
 
     VehicleSensorUpdate:
       type: object
@@ -578,19 +602,19 @@ components:
             POWERTRAIN:
               type: array
               items:
-                $ref: '#/components/schemas/SensorReading'
+                $ref: "#/components/schemas/SensorReading"
             CHASSIS:
               type: array
               items:
-                $ref: '#/components/schemas/SensorReading'
+                $ref: "#/components/schemas/SensorReading"
             AERO:
               type: array
               items:
-                $ref: '#/components/schemas/SensorReading'
+                $ref: "#/components/schemas/SensorReading"
             ELECTRONICS:
               type: array
               items:
-                $ref: '#/components/schemas/SensorReading'
+                $ref: "#/components/schemas/SensorReading"
 
     SensorReading:
       type: object

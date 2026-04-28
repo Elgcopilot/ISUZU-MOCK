@@ -145,6 +145,44 @@ function clamp(val: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, val));
 }
 
+const TRACK_LENGTH_METERS = 4554;
+const LAP_SECONDS = 90; // ~1:30 per lap — realistic circuit pace
+
+function getProgressContinuous(vehicleId: number, t: number): number {
+  const carPhase = vehicleId * 0.33; // spread cars around the track
+  return (t + carPhase) / LAP_SECONDS;
+}
+
+function getFleetPositionSnapshot(vehicleId: number, t: number) {
+  const ordered = CARS.map((car) => ({
+    vehicleId: car.id,
+    progressContinuous: getProgressContinuous(car.id, t),
+  })).sort((a, b) => b.progressContinuous - a.progressContinuous);
+
+  const idx = ordered.findIndex((car) => car.vehicleId === vehicleId);
+  const safeIndex = idx >= 0 ? idx : 0;
+  const current = ordered[safeIndex]?.progressContinuous ?? 0;
+  const leader = ordered[0]?.progressContinuous ?? current;
+  const ahead =
+    safeIndex > 0
+      ? (ordered[safeIndex - 1]?.progressContinuous ?? current)
+      : current;
+
+  const deltaToAheadMeters =
+    safeIndex > 0 ? Math.max(0, (ahead - current) * TRACK_LENGTH_METERS) : 0;
+  const deltaToLeaderMeters = Math.max(
+    0,
+    (leader - current) * TRACK_LENGTH_METERS,
+  );
+
+  return {
+    positionNumber: safeIndex + 1,
+    progressContinuous: current,
+    deltaToAheadMeters: Math.round(deltaToAheadMeters),
+    deltaToLeaderMeters: Math.round(deltaToLeaderMeters),
+  };
+}
+
 function buildTire(idx: number) {
   const t = elapsed();
   const w = Math.sin(t * 0.6 + idx);
@@ -159,6 +197,7 @@ function buildTire(idx: number) {
 /** WS telemetry frame — vehicle.telemetry channel (variable Hz). */
 export function buildTelemetryWs(vehicleId: number, _tick: number) {
   const t = elapsed();
+  const progressContinuous = getProgressContinuous(vehicleId, t);
   const driver = DRIVERS.find((d) => d.carId === vehicleId);
   // ~0.16 Hz oscillation — one full wave every ~6 seconds
   const w = Math.sin(t * 0.5 + vehicleId * 0.5);
@@ -167,6 +206,7 @@ export function buildTelemetryWs(vehicleId: number, _tick: number) {
     vehicleId,
     driverId: driver?.id ?? 1,
     timestamp: new Date().toISOString(),
+    distanceMeters: Math.round(progressContinuous * TRACK_LENGTH_METERS),
     speed: Math.round((180 + w * 40 + jitter(0, 3)) * 10) / 10,
     rpm: Math.round(6000 + w * 2000 + jitter(0, 100)),
     fuel:
@@ -206,8 +246,7 @@ export function buildTelemetryWs(vehicleId: number, _tick: number) {
 /** WS location frame — vehicle.location channel (variable Hz). */
 export function buildLocation(vehicleId: number, _tick: number) {
   const t = elapsed();
-  const LAP_SECONDS = 90; // ~1:30 per lap — realistic circuit pace
-  const carPhase = vehicleId * 0.33; // spread cars around the track
+  const progressContinuous = getProgressContinuous(vehicleId, t);
   return {
     vehicleId,
     timestamp: new Date().toISOString(),
@@ -215,8 +254,10 @@ export function buildLocation(vehicleId: number, _tick: number) {
     lng: 102.0 + Math.cos(t * 0.07 + vehicleId) * 0.003,
     speed: Math.round(180 + Math.sin(t * 0.5 + vehicleId) * 40),
     heading: (t * 4 + vehicleId * 30) % 360,
-    lap: Math.floor((t + carPhase) / LAP_SECONDS) + 1,
-    lapProgress: ((t + carPhase) / LAP_SECONDS) % 1,
+    lap: Math.floor(progressContinuous) + 1,
+    lapProgress: progressContinuous % 1,
+    progressContinuous,
+    trackLengthMeters: TRACK_LENGTH_METERS,
   };
 }
 
@@ -238,16 +279,23 @@ export function buildBiometric(vehicleId: number, _tick: number) {
 /** WS status frame — vehicle.status channel (every 5 s). */
 export function buildStatus(vehicleId: number, _tick: number) {
   const t = elapsed();
-  const LAP_SECONDS = 90;
-  const carPhase = vehicleId * 0.33;
   const driver = DRIVERS.find((d) => d.carId === vehicleId);
+  const {
+    positionNumber,
+    progressContinuous,
+    deltaToAheadMeters,
+    deltaToLeaderMeters,
+  } = getFleetPositionSnapshot(vehicleId, t);
   return {
     vehicleId,
     driverId: driver?.id ?? 1,
     connectionState: "synchronized" as const,
     latencyMs: Math.round(20 + jitter(0, 8)),
-    position: vehicleId <= 10 ? `P${vehicleId}` : `P${Math.min(vehicleId, 30)}`,
-    lap: Math.floor((t + carPhase) / LAP_SECONDS) + 1,
+    position: `P${positionNumber}`,
+    positionNumber,
+    deltaToAheadMeters,
+    deltaToLeaderMeters,
+    lap: Math.floor(progressContinuous) + 1,
     totalLaps: 67,
     currentTime: "1:22.405",
     bestTime: "1:21.503",

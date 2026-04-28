@@ -2867,8 +2867,21 @@ components:
           type: string
         gap:
           type: number
+          description: Legacy time-based delta in seconds.
         isPos:
           type: boolean
+          description: Legacy sign flag (true => rival ahead).
+        gapMeters:
+          type: number
+          description: Distance-based delta in meters.
+        deltaPosition:
+          type: integer
+          description: Position delta from active car perspective (+ ahead, - behind).
+        relation:
+          type: string
+          enum:
+            - AHEAD
+            - BEHIND
 
     EngineeringMapState:
       type: object
