@@ -538,7 +538,7 @@ let runtimeThresholds: Record<MetricKey, MetricThresholdConfig> = {
   rpm: { threshold: 9000, alertDelaySec: 1.0, violationsPerAnomaly: 3 },
   speed: { threshold: 300, alertDelaySec: 2.0, violationsPerAnomaly: 5 },
   throttle: { threshold: 95, alertDelaySec: 1.0, violationsPerAnomaly: 3 },
-  lambda: { threshold: 1.05, alertDelaySec: 1.0, violationsPerAnomaly: 3 },
+  lambda: { threshold: 2.0, alertDelaySec: 1.0, violationsPerAnomaly: 3 },
   fuelPressure: { threshold: 5.0, alertDelaySec: 1.0, violationsPerAnomaly: 3 },
   airflow: { threshold: 380, alertDelaySec: 1.0, violationsPerAnomaly: 3 },
   ignitionTiming: {
