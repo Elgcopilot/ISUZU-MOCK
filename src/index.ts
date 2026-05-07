@@ -1885,6 +1885,70 @@ const http = createServer(async (req: IncomingMessage, res: ServerResponse) => {
     return;
   }
 
+  // GET /telemetry/history?vehicleId=12&startDate=...&endDate=...&limit=1000
+  // Serves real captured frames from the in-memory ring buffer so the
+  // Director FULL window can fetch on demand instead of accumulating a
+  // session-wide buffer client-side.
+  if (method === "GET" && parsedUrl.pathname === "/telemetry/history") {
+    const { searchParams } = parsedUrl;
+    const vehicleId = Number(searchParams.get("vehicleId"));
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+    const limitRaw = Number(searchParams.get("limit") ?? 1000);
+    const limit = Number.isFinite(limitRaw)
+      ? Math.min(10_000, Math.max(1, Math.floor(limitRaw)))
+      : 1000;
+
+    if (!Number.isFinite(vehicleId) || vehicleId < 1) {
+      jsonResponse(res, 400, { error: "vehicleId must be a positive integer" });
+      return;
+    }
+    if (!startDate || !endDate) {
+      jsonResponse(res, 400, {
+        error: "startDate and endDate query params are required",
+      });
+      return;
+    }
+    const startMs = Date.parse(startDate);
+    const endMs = Date.parse(endDate);
+    if (
+      !Number.isFinite(startMs) ||
+      !Number.isFinite(endMs) ||
+      endMs < startMs
+    ) {
+      jsonResponse(res, 400, {
+        error:
+          "startDate/endDate must be valid ISO timestamps with end >= start",
+      });
+      return;
+    }
+
+    const buf = telemetryHistoryMap.get(vehicleId) ?? [];
+    // Filter by time window. Buffer is naturally time-ordered (append-only).
+    const filtered: ReturnType<typeof db.buildTelemetryWs>[] = [];
+    for (const frame of buf) {
+      const ts = Date.parse(frame.timestamp);
+      if (ts < startMs) continue;
+      if (ts > endMs) break;
+      filtered.push(frame);
+    }
+
+    // Even-stride downsample to honor `limit` while preserving the last frame.
+    let points = filtered;
+    if (filtered.length > limit) {
+      const stride = filtered.length / limit;
+      const sampled: ReturnType<typeof db.buildTelemetryWs>[] = [];
+      for (let i = 0; i < limit - 1; i++) {
+        sampled.push(filtered[Math.floor(i * stride)]);
+      }
+      sampled.push(filtered[filtered.length - 1]);
+      points = sampled;
+    }
+
+    jsonResponse(res, 200, { vehicleId, points });
+    return;
+  }
+
   // All other paths — proxy to Stoplight Prism on port 4000
   const PRISM_PORT = Number(process.env.PRISM_PORT ?? 4000);
   try {
@@ -1972,6 +2036,59 @@ let tick = 0;
 // can reference it without rebuilding the frame a second time.
 const lastFrameMap = new Map<number, ReturnType<typeof db.buildTelemetryWs>>();
 
+// ── Telemetry history buffer ─────────────────────────────────────────────
+// Per-vehicle ring buffer of recent telemetry frames so the REST handler
+// `GET /telemetry/history` can serve real captured data instead of the
+// random Prism stub. Keeps memory bounded by:
+//   • capping per-vehicle frame count (default 30 minutes worth at 25Hz)
+//   • pruning frames older than the retention window every 60s
+const TELEMETRY_HISTORY_RETENTION_MS = Number(
+  process.env.TELEMETRY_HISTORY_RETENTION_MS ?? 30 * 60 * 1000,
+);
+const TELEMETRY_HISTORY_MAX_FRAMES_PER_VEHICLE = Number(
+  process.env.TELEMETRY_HISTORY_MAX_FRAMES ?? 30 * 60 * 25, // 30 min @ 25Hz
+);
+const telemetryHistoryMap = new Map<
+  number,
+  ReturnType<typeof db.buildTelemetryWs>[]
+>();
+
+function appendTelemetryHistory(
+  vehicleId: number,
+  frame: ReturnType<typeof db.buildTelemetryWs>,
+): void {
+  let buf = telemetryHistoryMap.get(vehicleId);
+  if (!buf) {
+    buf = [];
+    telemetryHistoryMap.set(vehicleId, buf);
+  }
+  buf.push(frame);
+  if (buf.length > TELEMETRY_HISTORY_MAX_FRAMES_PER_VEHICLE) {
+    buf.splice(0, buf.length - TELEMETRY_HISTORY_MAX_FRAMES_PER_VEHICLE);
+  }
+}
+
+// Time-based pruning — runs every 60s. Keeps memory steady when the server
+// stays up for hours/days even if frame count is below the per-vehicle cap.
+setInterval(() => {
+  const cutoffMs = Date.now() - TELEMETRY_HISTORY_RETENTION_MS;
+  for (const [vehicleId, buf] of telemetryHistoryMap) {
+    let firstKeepIdx = 0;
+    while (
+      firstKeepIdx < buf.length &&
+      Date.parse(buf[firstKeepIdx].timestamp) < cutoffMs
+    ) {
+      firstKeepIdx++;
+    }
+    if (firstKeepIdx > 0) {
+      buf.splice(0, firstKeepIdx);
+    }
+    if (buf.length === 0) {
+      telemetryHistoryMap.delete(vehicleId);
+    }
+  }
+}, 60_000);
+
 // telemetry + location — dynamic rate driven by directorRefreshRateHz.
 // The timer is restarted whenever the admin changes the refresh rate via PUT.
 let telemetryTimerId: ReturnType<typeof setInterval> | null = null;
@@ -1983,6 +2100,7 @@ function telemetryTick() {
   for (const car of db.CARS) {
     const frame = db.buildTelemetryWs(car.id, tick);
     lastFrameMap.set(car.id, frame);
+    appendTelemetryHistory(car.id, frame);
     db.updateAnomalyState(car.id, frame);
   }
   broadcast(
