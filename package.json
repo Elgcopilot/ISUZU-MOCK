@@ -5,6 +5,7 @@
   "description": "Local mock server for the Racing Platform frontend. REST is served by Stoplight Prism directly from openapi.yaml. WebSocket channels are served by a minimal Socket.IO server.",
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "sync:contracts:fe": "node -e \"const fs=require('fs');const path=require('path');const srcRoot=process.cwd();const feRoot=path.resolve(srcRoot,'..','ISUZU-RACING-FE');const pairs=[['openapi.yaml','openapi.yaml'],['asyncapi.yaml','asyncapi.yaml']];for(const [srcName,dstName] of pairs){const src=path.join(srcRoot,srcName);const dst=path.join(feRoot,dstName);if(!fs.existsSync(dst)){throw new Error('Target file not found: '+dst);}fs.copyFileSync(src,dst);console.log('synced',srcName,'->',dst);}console.log('contract sync complete');\"",
     "rest": "node src/start-prism.js --port 4000 --host 0.0.0.0 --cors",
     "ws": "tsx watch src/index.ts",
     "dev": "concurrently --names REST,WS --prefix-colors cyan,yellow \"npm:rest\" \"npm:ws\"",

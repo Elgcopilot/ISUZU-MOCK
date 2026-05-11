@@ -98,6 +98,8 @@ paths:
                         { threshold: 300, alertDelay: 2.0, warningPenalty: 5 }
                       fuelPressure:
                         { threshold: 5.0, alertDelay: 1.0, warningPenalty: 3 }
+                      boost:
+                        { threshold: 2.8, alertDelay: 1.0, warningPenalty: 3 }
                       throttle:
                         { threshold: 95, alertDelay: 1.0, warningPenalty: 3 }
                       ignitionTiming:
@@ -137,6 +139,8 @@ paths:
                       { threshold: 300, alertDelay: 2.0, warningPenalty: 5 }
                     fuelPressure:
                       { threshold: 5.0, alertDelay: 1.0, warningPenalty: 3 }
+                    boost:
+                      { threshold: 2.8, alertDelay: 1.0, warningPenalty: 3 }
                     throttle:
                       { threshold: 95, alertDelay: 1.0, warningPenalty: 3 }
                     ignitionTiming:

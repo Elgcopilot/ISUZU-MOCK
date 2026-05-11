@@ -565,6 +565,7 @@ export type MetricKey =
   | "throttle"
   | "lambda"
   | "fuelPressure"
+  | "boost"
   | "airflow"
   | "ignitionTiming";
 
@@ -588,6 +589,7 @@ let runtimeThresholds: Record<MetricKey, MetricThresholdConfig> = {
   throttle: { threshold: 95, alertDelaySec: 1.0, violationsPerAnomaly: 3 },
   lambda: { threshold: 2.0, alertDelaySec: 1.0, violationsPerAnomaly: 3 },
   fuelPressure: { threshold: 5.0, alertDelaySec: 1.0, violationsPerAnomaly: 3 },
+  boost: { threshold: 2.8, alertDelaySec: 1.0, violationsPerAnomaly: 3 },
   airflow: { threshold: 380, alertDelaySec: 1.0, violationsPerAnomaly: 3 },
   ignitionTiming: {
     threshold: 38,
@@ -681,6 +683,7 @@ export function updateAnomalyState(
     throttle: frame.throttle,
     lambda: frame.lambda,
     fuelPressure: frame.fuelPressure,
+    boost: frame.boost,
     airflow: frame.airflow,
     ignitionTiming: frame.ignitionTiming,
   };
@@ -731,6 +734,7 @@ export function buildAnomalySummary(
     throttle: lastFrame.throttle,
     lambda: lastFrame.lambda,
     fuelPressure: lastFrame.fuelPressure,
+    boost: lastFrame.boost,
     airflow: lastFrame.airflow,
     ignitionTiming: lastFrame.ignitionTiming,
   };

@@ -561,7 +561,7 @@ components:
           type: object
           description: >
             Per-metric anomaly summaries. Keys match metric names available in
-            the vehicle.telemetry frame (rpm, speed, throttle, lambda, fuelPressure, airflow, ignitionTiming).
+            the vehicle.telemetry frame (rpm, speed, throttle, lambda, fuelPressure, boost, airflow, ignitionTiming).
           properties:
             rpm:
               $ref: "#/components/schemas/MetricAnomalySummary"
@@ -572,6 +572,8 @@ components:
             lambda:
               $ref: "#/components/schemas/MetricAnomalySummary"
             fuelPressure:
+              $ref: "#/components/schemas/MetricAnomalySummary"
+            boost:
               $ref: "#/components/schemas/MetricAnomalySummary"
             airflow:
               $ref: "#/components/schemas/MetricAnomalySummary"

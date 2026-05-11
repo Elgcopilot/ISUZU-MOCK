@@ -54,6 +54,7 @@ const METRIC_MAP: Record<string, db.MetricKey> = {
   throttle: "throttle",
   lambda: "lambda",
   fuelPressure: "fuelPressure",
+  boost: "boost",
   airflow: "airflow",
   ignitionTiming: "ignitionTiming",
 };
@@ -1835,7 +1836,7 @@ const http = createServer(async (req: IncomingMessage, res: ServerResponse) => {
         {};
       for (const [apiKey, cfg] of Object.entries(body.thresholds)) {
         const engineKey = METRIC_MAP[apiKey];
-        if (!engineKey) continue; // unmapped metrics (ignitionTiming, airflow) skipped
+        if (!engineKey) continue;
         update[engineKey] = {
           threshold: Number(cfg.threshold),
           alertDelaySec: Number(cfg.alertDelay),
