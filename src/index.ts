@@ -45,6 +45,21 @@ function jsonResponse(
   res.end(body);
 }
 
+function csvResponse(
+  res: ServerResponse,
+  fileName: string,
+  csv: string,
+): void {
+  res.writeHead(200, {
+    "Content-Type": "text/csv; charset=utf-8",
+    "Content-Disposition": `attachment; filename="${fileName}"`,
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  });
+  res.end(csv);
+}
+
 // API key → administration graphConfig key mapping.
 // The frontend uses field names from DirectorGraphConfig; the engine uses
 // internal MetricKey names — match the WS MetricKey names exactly.
@@ -235,6 +250,63 @@ interface CreateRecordingRequestBody {
   requestedBy?: string;
 }
 
+interface LogReportRow {
+  id: number;
+  createTime: string;
+  name: string;
+  device: number;
+  car: string;
+  datetime: string;
+  lat: number;
+  lon: number;
+  speed: number;
+  x: number;
+  y: number;
+  z: number;
+  magX: number;
+  magY: number;
+  magZ: number;
+  gyX: number;
+  gyY: number;
+  gyZ: number;
+  map: number;
+  lambda: number;
+  even: string;
+  class: string;
+  hr: number;
+  dutyInjection: number;
+  coolantTemp: number;
+  fuelFlowRate: number;
+  fuelRailPressure: number;
+  oilPressure: number;
+  oilTemp: number;
+  rpm: number;
+  sat: number;
+  airTemp: number;
+  speedFl: number;
+  speedFr: number;
+  speedRl: number;
+  speedRr: number;
+  batteryVolatge: number;
+  drs: number;
+  throttle: number;
+  lap: number;
+  fuelRailPressureWarning: number;
+  fuelRailPressurePenalty: number;
+  throttleWarning: number;
+  throttlePenalty: number;
+  ignitionTimeingWarning: number;
+  ignitionTimeingPenalty: number;
+  lambdaWarning: number;
+  lambdaPenalty: number;
+  airWarning: number;
+  airPenalty: number;
+  speedWarning: number;
+  speedPenalty: number;
+  rpmWarning: number;
+  rpmPenalty: number;
+}
+
 interface SeedRecordingFixture {
   id: string;
   vehicleId: number;
@@ -313,7 +385,7 @@ const mockCredentials: MockCredential[] = [
     name: "Competitor Driver",
     email: "competitor@isuzu.com",
     password: "Competitor@123",
-    landingPage: "/director",
+    landingPage: "/engineering",
     notes: "Use for driver-only graph access scoped to car #01.",
     access: "Competitor",
     assignedCarIds: [1],
@@ -654,7 +726,7 @@ const permissionsByRole: Record<MockCredential["role"], UserPermissions> = {
   },
   COMPETITOR: {
     raceControl: true,
-    engineering: false,
+    engineering: true,
     administration: false,
     directorThresholds: false,
   },
@@ -771,7 +843,7 @@ function getBearerToken(req: IncomingMessage): string | null {
 }
 
 function createId(prefix: string): string {
-  return `${prefix}-${Date.now()}`;
+  return `${prefix}-${Date.now()}-${randomBytes(3).toString("hex")}`;
 }
 
 function sanitizeFileName(value: string): string {
@@ -850,6 +922,136 @@ function collectDescendantIds(fileId: string): string[] {
     .flatMap((file) => collectDescendantIds(file.id));
 
   return [fileId, ...directChildren];
+}
+
+function buildReportRows(): LogReportRow[] {
+  const baseMs = Date.now() - 15 * 60 * 1000;
+  const eventName = "Bira International Circuit";
+  const eventCode = "pt";
+  const className = "isuzu-omr";
+
+  return db.CARS.flatMap((car, carIndex) =>
+    Array.from({ length: 8 }, (_, sampleIndex) => {
+      const id = carIndex * 100 + sampleIndex + 1;
+      const datetime = new Date(
+        baseMs + sampleIndex * 20_000 + carIndex * 750,
+      ).toISOString();
+      const speed = Math.round(120 + ((carIndex * 9 + sampleIndex * 7) % 95));
+      const rpm = Math.round(3600 + ((carIndex * 310 + sampleIndex * 225) % 3800));
+      const throttle = Math.round(45 + ((carIndex * 4 + sampleIndex * 6) % 55));
+      const lambda = Number((0.92 + ((carIndex + sampleIndex) % 18) / 100).toFixed(3));
+      const map = Number((1.1 + ((carIndex + sampleIndex) % 16) / 10).toFixed(2));
+      const warning = throttle > 95 ? 1 : 0;
+      const penalty = throttle > 98 ? 1 : 0;
+
+      return {
+        id,
+        createTime: datetime,
+        name: eventName,
+        device: car.id,
+        car: car.number,
+        datetime,
+        lat: Number((13.585 + carIndex * 0.0002 + sampleIndex * 0.0001).toFixed(6)),
+        lon: Number((100.997 + carIndex * 0.0002 + sampleIndex * 0.0001).toFixed(6)),
+        speed,
+        x: Number((Math.sin(sampleIndex / 3) * 1.8).toFixed(3)),
+        y: Number((Math.cos(sampleIndex / 4) * 1.2).toFixed(3)),
+        z: Number((0.1 + sampleIndex * 0.01).toFixed(3)),
+        magX: Number((25 + carIndex * 0.2).toFixed(2)),
+        magY: Number((18 + sampleIndex * 0.3).toFixed(2)),
+        magZ: Number((42 + carIndex * 0.1).toFixed(2)),
+        gyX: Number((sampleIndex * 0.12).toFixed(3)),
+        gyY: Number((sampleIndex * 0.08).toFixed(3)),
+        gyZ: Number((sampleIndex * 0.05).toFixed(3)),
+        map,
+        lambda,
+        even: eventCode,
+        class: className,
+        hr: 90 + ((carIndex + sampleIndex) % 45),
+        dutyInjection: 28 + ((carIndex + sampleIndex) % 48),
+        coolantTemp: 86 + ((carIndex + sampleIndex) % 14),
+        fuelFlowRate: Number((18 + speed / 12).toFixed(2)),
+        fuelRailPressure: Number((3.2 + map / 4).toFixed(2)),
+        oilPressure: Number((3.8 + rpm / 9000).toFixed(2)),
+        oilTemp: 92 + ((carIndex + sampleIndex) % 18),
+        rpm,
+        sat: 10 + ((carIndex + sampleIndex) % 5),
+        airTemp: 34 + ((carIndex + sampleIndex) % 7),
+        speedFl: speed + 1,
+        speedFr: speed,
+        speedRl: speed - 1,
+        speedRr: speed,
+        batteryVolatge: Number((12.1 + ((carIndex + sampleIndex) % 8) / 10).toFixed(1)),
+        drs: sampleIndex % 3 === 0 ? 1 : 0,
+        throttle,
+        lap: 1 + (sampleIndex % 5),
+        fuelRailPressureWarning: 0,
+        fuelRailPressurePenalty: 0,
+        throttleWarning: warning,
+        throttlePenalty: penalty,
+        ignitionTimeingWarning: 0,
+        ignitionTimeingPenalty: 0,
+        lambdaWarning: lambda > 1.05 ? 1 : 0,
+        lambdaPenalty: lambda > 1.08 ? 1 : 0,
+        airWarning: 0,
+        airPenalty: 0,
+        speedWarning: speed > 190 ? 1 : 0,
+        speedPenalty: speed > 205 ? 1 : 0,
+        rpmWarning: rpm > 7000 ? 1 : 0,
+        rpmPenalty: rpm > 7300 ? 1 : 0,
+      };
+    }),
+  );
+}
+
+function filterReportRows(searchParams: URLSearchParams): LogReportRow[] {
+  const from = searchParams.get("from");
+  const to = searchParams.get("to");
+  const car = searchParams.get("car")?.trim().toLowerCase();
+  const name = searchParams.get("name")?.trim().toLowerCase();
+  const event = searchParams.get("event")?.trim().toLowerCase();
+  const className = searchParams.get("className")?.trim().toLowerCase();
+  const sortBy = searchParams.get("sortBy") === "createTime" ? "createTime" : "datetime";
+  const sortOrder = searchParams.get("sortOrder") === "asc" ? "asc" : "desc";
+  const fromMs = from ? Date.parse(from) : Number.NaN;
+  const toMs = to ? Date.parse(to) : Number.NaN;
+
+  const rows = buildReportRows().filter((row) => {
+    const rowMs = Date.parse(row.datetime);
+    if (Number.isFinite(fromMs) && rowMs < fromMs) return false;
+    if (Number.isFinite(toMs) && rowMs > toMs) return false;
+    if (car && row.car.toLowerCase() !== car.replace(/^#/, "")) return false;
+    if (name && row.name.toLowerCase() !== name) return false;
+    if (event && row.even.toLowerCase() !== event) return false;
+    if (className && row.class.toLowerCase() !== className) return false;
+    return true;
+  });
+
+  return rows.sort((left, right) => {
+    const delta = Date.parse(left[sortBy]) - Date.parse(right[sortBy]);
+    return sortOrder === "asc" ? delta : -delta;
+  });
+}
+
+function reportRowsToCsv(rows: LogReportRow[]): string {
+  const columns = Object.keys(rows[0] ?? {
+    id: "",
+    createTime: "",
+    name: "",
+    device: "",
+    car: "",
+    datetime: "",
+  });
+  const escapeCsv = (value: unknown) => {
+    const text = String(value ?? "");
+    return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+  };
+  return [
+    columns.join(","),
+    ...rows.map((row) =>
+      columns.map((column) => escapeCsv(row[column as keyof LogReportRow])).join(","),
+    ),
+  ].join("\n");
 }
 
 function createRecordingSession(
@@ -1350,6 +1552,40 @@ const http = createServer(async (req: IncomingMessage, res: ServerResponse) => {
     return;
   }
 
+  if (method === "POST" && parsedUrl.pathname === "/files/folder") {
+    try {
+      const raw = await readBody(req);
+      const body = JSON.parse(raw) as { name?: string; parentId?: string };
+      const name = body.name?.trim();
+      const parentId = body.parentId?.trim() || "root";
+      if (!name) {
+        jsonResponse(res, 400, { error: { message: "Folder name is required." } });
+        return;
+      }
+      if (parentId !== "root") {
+        const parent = filesStore.get(parentId);
+        if (!parent || parent.type !== "folder") {
+          jsonResponse(res, 404, { error: { message: "Parent folder not found." } });
+          return;
+        }
+      }
+
+      const id = createId("folder");
+      const folder: StoredFileNode = {
+        id,
+        parentId,
+        name,
+        type: "folder",
+        date: new Date().toISOString(),
+      };
+      filesStore.set(id, folder);
+      jsonResponse(res, 201, { id, file: folder });
+    } catch {
+      jsonResponse(res, 400, { error: "invalid JSON body" });
+    }
+    return;
+  }
+
   if (method === "GET" && parsedUrl.pathname === "/recordings") {
     const vehicleIdParam = parsedUrl.searchParams.get("vehicleId");
     const vehicleId = vehicleIdParam ? Number(vehicleIdParam) : undefined;
@@ -1389,6 +1625,91 @@ const http = createServer(async (req: IncomingMessage, res: ServerResponse) => {
       jsonResponse(res, 400, { error: "invalid JSON body" });
     }
     return;
+  }
+
+  if (method === "POST" && parsedUrl.pathname === "/recordings/start") {
+    try {
+      const raw = await readBody(req);
+      const body = JSON.parse(raw) as { vehicleId?: number; sessionName?: string };
+      const vehicleId = Number(body.vehicleId);
+      const sessionName = body.sessionName?.trim() || "Screen Recording";
+      if (!Number.isFinite(vehicleId) || vehicleId <= 0) {
+        jsonResponse(res, 400, {
+          error: { message: "vehicleId must be a positive number." },
+        });
+        return;
+      }
+
+      const now = new Date().toISOString();
+      const sessionId = createId("rec");
+      const sessionFolderId = createId("rec-folder");
+      const session: InternalRecordingSession = {
+        id: sessionId,
+        vehicleId,
+        sessionName,
+        startDate: now,
+        endDate: now,
+        status: "processing",
+        fileCount: 0,
+        createdAt: now,
+        targetFolderId: "root",
+        sourcePage: "ENGINEERING",
+        requestedBy: "Screen Recorder",
+        sessionFolderId,
+      };
+      recordingsStore.set(sessionId, session);
+      jsonResponse(res, 201, { id: sessionId });
+    } catch {
+      jsonResponse(res, 400, { error: "invalid JSON body" });
+    }
+    return;
+  }
+
+  if (method === "PATCH") {
+    const recordingPatchMatch = parsedUrl.pathname.match(/^\/recordings\/([^/]+)$/);
+    if (recordingPatchMatch) {
+      try {
+        const recordingId = decodeURIComponent(recordingPatchMatch[1]);
+        const current = recordingsStore.get(recordingId);
+        if (!current) {
+          jsonResponse(res, 404, {
+            error: { code: "NOT_FOUND", message: "Recording not found." },
+          });
+          return;
+        }
+
+        const raw = await readBody(req);
+        const body = JSON.parse(raw) as Partial<RecordingSession> & {
+          targetFolderId?: string;
+        };
+        const nextTargetFolderId = body.targetFolderId?.trim();
+        if (nextTargetFolderId && nextTargetFolderId !== "root") {
+          const targetFolder = filesStore.get(nextTargetFolderId);
+          if (!targetFolder || targetFolder.type !== "folder") {
+            jsonResponse(res, 404, {
+              error: { code: "NOT_FOUND", message: "Target folder not found." },
+            });
+            return;
+          }
+        }
+
+        const updated: InternalRecordingSession = {
+          ...current,
+          sessionName: body.sessionName ?? current.sessionName,
+          startDate: body.startDate ?? current.startDate,
+          endDate: body.endDate ?? current.endDate,
+          status: body.status ?? current.status,
+          targetFolderId: nextTargetFolderId ?? current.targetFolderId,
+          sourcePage: body.sourcePage ?? current.sourcePage,
+          requestedBy: body.requestedBy ?? current.requestedBy,
+        };
+        recordingsStore.set(recordingId, updated);
+        jsonResponse(res, 200, toPublicRecordingSession(updated));
+      } catch {
+        jsonResponse(res, 400, { error: "invalid JSON body" });
+      }
+      return;
+    }
   }
 
   if (method === "GET") {
@@ -1449,6 +1770,46 @@ const http = createServer(async (req: IncomingMessage, res: ServerResponse) => {
   }
 
   if (method === "POST") {
+    const recordingUploadMatch = parsedUrl.pathname.match(
+      /^\/recordings\/([^/]+)\/upload$/,
+    );
+    if (recordingUploadMatch) {
+      const recordingId = decodeURIComponent(recordingUploadMatch[1]);
+      const recording = recordingsStore.get(recordingId);
+      if (!recording) {
+        jsonResponse(res, 404, {
+          error: { code: "NOT_FOUND", message: "Recording not found." },
+        });
+        return;
+      }
+
+      const now = new Date().toISOString();
+      const parentId = recording.targetFolderId ?? "root";
+      const archiveFileName =
+        recording.archiveFileName ?? `${sanitizeFileName(recording.sessionName)}.webm`;
+      const file: StoredFileNode = {
+        id: createId("upload"),
+        parentId,
+        name: archiveFileName,
+        type: "mp4",
+        size: "18 MB",
+        date: now,
+        recordingId,
+        downloadUrl: buildRecordingArchiveUrl(recordingId, archiveFileName),
+      };
+      filesStore.set(file.id, file);
+      recordingsStore.set(recordingId, {
+        ...recording,
+        endDate: now,
+        status: "ready",
+        fileCount: recording.fileCount + 1,
+        archiveFileName,
+        downloadUrl: file.downloadUrl,
+      });
+      jsonResponse(res, 201, { uploaded: true, recordingId, file });
+      return;
+    }
+
     const engineeringRecordingMatch = parsedUrl.pathname.match(
       /^\/engineering\/cars\/(\d+)\/recordings$/,
     );
@@ -1917,6 +2278,90 @@ const http = createServer(async (req: IncomingMessage, res: ServerResponse) => {
     } catch {
       jsonResponse(res, 400, { error: "invalid JSON body" });
     }
+    return;
+  }
+
+  if (method === "GET" && parsedUrl.pathname === "/race-control/thresholds") {
+    jsonResponse(res, 200, { thresholds: alertThresholdsStore });
+    return;
+  }
+
+  if (method === "PUT" && parsedUrl.pathname === "/race-control/thresholds") {
+    try {
+      const raw = await readBody(req);
+      const body = JSON.parse(raw) as { thresholds?: typeof alertThresholdsStore };
+      if (!Array.isArray(body.thresholds)) {
+        jsonResponse(res, 400, { error: "thresholds array required" });
+        return;
+      }
+      alertThresholdsStore.length = 0;
+      alertThresholdsStore.push(...body.thresholds);
+      jsonResponse(res, 200, {
+        saved: true,
+        updatedAt: new Date().toISOString(),
+      });
+    } catch {
+      jsonResponse(res, 400, { error: "invalid JSON body" });
+    }
+    return;
+  }
+
+  if (method === "GET" && parsedUrl.pathname === "/race-control/refresh-rate") {
+    jsonResponse(res, 200, {
+      refreshRateHz: directorRefreshRateHz,
+      updatedAt: new Date().toISOString(),
+    });
+    return;
+  }
+
+  if (method === "PUT" && parsedUrl.pathname === "/race-control/refresh-rate") {
+    try {
+      const raw = await readBody(req);
+      const body = JSON.parse(raw) as { refreshRateHz?: number };
+      const nextRefreshRateHz = Number(body.refreshRateHz);
+      if (!Number.isFinite(nextRefreshRateHz) || nextRefreshRateHz <= 0) {
+        jsonResponse(res, 400, {
+          error: "refreshRateHz must be a positive number",
+        });
+        return;
+      }
+      directorRefreshRateHz = nextRefreshRateHz;
+      startTelemetryTimer();
+      jsonResponse(res, 200, {
+        saved: true,
+        refreshRateHz: directorRefreshRateHz,
+        updatedAt: new Date().toISOString(),
+      });
+    } catch {
+      jsonResponse(res, 400, { error: "invalid JSON body" });
+    }
+    return;
+  }
+
+  if (method === "GET" && parsedUrl.pathname === "/reports/logs") {
+    const rows = filterReportRows(parsedUrl.searchParams);
+    const page = Math.max(1, Number(parsedUrl.searchParams.get("page") ?? 1));
+    const pageSize = Math.min(
+      500,
+      Math.max(1, Number(parsedUrl.searchParams.get("pageSize") ?? 100)),
+    );
+    const start = (page - 1) * pageSize;
+    jsonResponse(res, 200, {
+      rows: rows.slice(start, start + pageSize),
+      total: rows.length,
+      page,
+      pageSize,
+    });
+    return;
+  }
+
+  if (method === "GET" && parsedUrl.pathname === "/reports/logs/export") {
+    const rows = filterReportRows(parsedUrl.searchParams);
+    csvResponse(
+      res,
+      `telemetry-log-report-${new Date().toISOString().slice(0, 10)}.csv`,
+      reportRowsToCsv(rows),
+    );
     return;
   }
 
