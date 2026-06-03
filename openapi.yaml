@@ -1399,6 +1399,10 @@ paths:
                 value:
                   email: director@isuzu.com
                   password: Director@123
+              competitor:
+                value:
+                  email: competitor@isuzu.com
+                  password: Competitor@123
       responses:
         "200":
           description: Mock login succeeded.
@@ -1419,6 +1423,7 @@ paths:
                       role: ENGINEER
                       email: engineer@isuzu.com
                       access: Engineer
+                      assignedCarIds: [1]
                       permissions:
                         raceControl: true
                         engineering: true
@@ -1443,6 +1448,25 @@ paths:
                         administration: false
                         directorThresholds: true
                     landingPage: /overview-director
+                competitor:
+                  value:
+                    authenticated: true
+                    accessToken: <jwt-issued-at-runtime>
+                    tokenType: Bearer
+                    expiresAt: "2026-04-06T18:13:51.000Z"
+                    user:
+                      id: user-competitor-1
+                      name: Competitor Driver
+                      role: COMPETITOR
+                      email: competitor@isuzu.com
+                      access: Competitor
+                      assignedCarIds: [1]
+                      permissions:
+                        raceControl: true
+                        engineering: false
+                        administration: false
+                        directorThresholds: false
+                    landingPage: /director
         "401":
           description: Mock credentials are invalid.
           content:
@@ -1587,6 +1611,11 @@ paths:
                         email: engineer@isuzu.com
                         role: Trackside Engineer
                         access: Engineer
+                      - id: user-competitor-1
+                        name: Competitor Driver
+                        email: competitor@isuzu.com
+                        role: Competitor
+                        access: Competitor
         "401":
           $ref: "#/components/responses/UnauthorizedError"
         "500":
@@ -2021,6 +2050,7 @@ components:
         - ADMIN
         - DIRECTOR
         - ENGINEER
+        - COMPETITOR
 
     UserPermissions:
       type: object
@@ -2111,6 +2141,7 @@ components:
         - Admin
         - Director
         - Engineer
+        - Competitor
 
     MockLoginRequest:
       type: object

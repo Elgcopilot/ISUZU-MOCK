@@ -129,19 +129,20 @@ interface AdminUser {
   name: string;
   role: string;
   email: string;
-  access: "Admin" | "Director" | "Engineer";
+  access: "Admin" | "Director" | "Engineer" | "Competitor";
 }
 
 interface MockCredential {
   id: string;
-  role: "ADMIN" | "DIRECTOR" | "ENGINEER";
+  role: "ADMIN" | "DIRECTOR" | "ENGINEER" | "COMPETITOR";
   label: string;
   name: string;
   email: string;
   password: string;
   landingPage: string;
   notes: string;
-  access: "Admin" | "Director" | "Engineer";
+  access: "Admin" | "Director" | "Engineer" | "Competitor";
+  assignedCarIds?: number[];
 }
 
 interface UserPermissions {
@@ -162,6 +163,7 @@ interface MockJwtClaims {
   exp: number;
   iss: string;
   aud: string;
+  assignedCarIds?: number[];
 }
 
 interface Garage {
@@ -289,6 +291,7 @@ const mockCredentials: MockCredential[] = [
     landingPage: "/engineering",
     notes: "Use for telemetry and garage workflow scenarios.",
     access: "Engineer",
+    assignedCarIds: [1],
   },
   {
     id: "user-engineer-2",
@@ -300,6 +303,19 @@ const mockCredentials: MockCredential[] = [
     landingPage: "/engineering",
     notes: "Second engineer for mock login.",
     access: "Engineer",
+    assignedCarIds: [2],
+  },
+  {
+    id: "user-competitor-1",
+    role: "COMPETITOR",
+    label: "Competitor",
+    name: "Competitor Driver",
+    email: "competitor@isuzu.com",
+    password: "Competitor@123",
+    landingPage: "/director",
+    notes: "Use for driver-only graph access scoped to car #01.",
+    access: "Competitor",
+    assignedCarIds: [1],
   },
 ];
 const eventsStore = new Map<string, RaceEvent>([
@@ -634,12 +650,19 @@ const permissionsByRole: Record<MockCredential["role"], UserPermissions> = {
     administration: false,
     directorThresholds: false,
   },
+  COMPETITOR: {
+    raceControl: true,
+    engineering: false,
+    administration: false,
+    directorThresholds: false,
+  },
 };
 
 const accessByRole: Record<MockCredential["role"], MockCredential["access"]> = {
   ADMIN: "Admin",
   DIRECTOR: "Director",
   ENGINEER: "Engineer",
+  COMPETITOR: "Competitor",
 };
 
 function inferAccessFromRole(role: string): AdminUser["access"] {
@@ -649,6 +672,9 @@ function inferAccessFromRole(role: string): AdminUser["access"] {
   }
   if (normalizedRole.includes("DIRECTOR")) {
     return "Director";
+  }
+  if (normalizedRole.includes("COMPETITOR")) {
+    return "Competitor";
   }
   return "Engineer";
 }
@@ -693,6 +719,7 @@ function buildClaims(credential: MockCredential): MockJwtClaims {
     exp: iat + jwtTtlSeconds,
     iss: jwtIssuer,
     aud: jwtAudience,
+    assignedCarIds: credential.assignedCarIds,
   };
 }
 
@@ -1231,6 +1258,7 @@ const http = createServer(async (req: IncomingMessage, res: ServerResponse) => {
           email: credential.email,
           access: credential.access,
           permissions: claims.permissions,
+          assignedCarIds: credential.assignedCarIds,
         },
         landingPage: credential.landingPage,
       });
@@ -1278,6 +1306,7 @@ const http = createServer(async (req: IncomingMessage, res: ServerResponse) => {
         email: credential.email,
         access: credential.access,
         permissions: claims.permissions,
+        assignedCarIds: credential.assignedCarIds,
       },
       claims,
       landingPage: credential.landingPage,

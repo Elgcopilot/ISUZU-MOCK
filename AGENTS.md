@@ -46,13 +46,14 @@ Subscription protocol: client emits `subscribe { channel, vehicleId }`, server s
 
 ## Mock Auth
 
-JWT-based. Three roles with fixed credentials:
+JWT-based. Four roles with fixed credentials:
 
 | Role     | Email              | Password     |
 | -------- | ------------------ | ------------ |
 | Admin    | admin@isuzu.com    | Admin@123    |
 | Director | director@isuzu.com | Director@123 |
 | Engineer | engineer@isuzu.com | Engineer@123 |
+| Competitor | competitor@isuzu.com | Competitor@123 |
 
 ## Adding or Modifying Endpoints
 
