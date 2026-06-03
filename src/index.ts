@@ -130,6 +130,7 @@ interface AdminUser {
   role: string;
   email: string;
   access: "Admin" | "Director" | "Engineer" | "Competitor";
+  assignedCarIds?: number[];
 }
 
 interface MockCredential {
@@ -342,6 +343,7 @@ const adminUsersStore = new Map<string, AdminUser>([
           role: credential.label,
           email: credential.email,
           access: credential.access,
+          assignedCarIds: credential.assignedCarIds,
         },
       ] as const,
   ),
@@ -1324,6 +1326,9 @@ const http = createServer(async (req: IncomingMessage, res: ServerResponse) => {
         role: body.role ?? "Engineer",
         email: body.email ?? "new.user@isuzu-racing.local",
         access: body.access ?? inferAccessFromRole(body.role ?? "Engineer"),
+        assignedCarIds: Array.isArray(body.assignedCarIds)
+          ? body.assignedCarIds
+          : undefined,
       };
       adminUsersStore.set(user.id, user);
       jsonResponse(res, 201, user);

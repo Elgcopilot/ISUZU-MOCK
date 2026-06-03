@@ -1611,11 +1611,13 @@ paths:
                         email: engineer@isuzu.com
                         role: Trackside Engineer
                         access: Engineer
+                        assignedCarIds: [1]
                       - id: user-competitor-1
                         name: Competitor Driver
                         email: competitor@isuzu.com
                         role: Competitor
                         access: Competitor
+                        assignedCarIds: [1]
         "401":
           $ref: "#/components/responses/UnauthorizedError"
         "500":
@@ -2100,6 +2102,11 @@ components:
           $ref: "#/components/schemas/UserRole"
         access:
           $ref: "#/components/schemas/MockAccessLevel"
+        assignedCarIds:
+          type: array
+          description: Vehicle ids assigned to scoped roles such as Engineer or Competitor.
+          items:
+            type: integer
         permissions:
           $ref: "#/components/schemas/UserPermissions"
         iat:
@@ -2176,6 +2183,11 @@ components:
           format: email
         access:
           $ref: "#/components/schemas/MockAccessLevel"
+        assignedCarIds:
+          type: array
+          description: Vehicle ids assigned to scoped roles such as Engineer or Competitor.
+          items:
+            type: integer
         permissions:
           $ref: "#/components/schemas/UserPermissions"
 
@@ -3504,6 +3516,11 @@ components:
           format: email
         access:
           $ref: "#/components/schemas/MockAccessLevel"
+        assignedCarIds:
+          type: array
+          description: Vehicle ids assigned to scoped roles such as Engineer or Competitor.
+          items:
+            type: integer
 
     UserListResponse:
       type: object
